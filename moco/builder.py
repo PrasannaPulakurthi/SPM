@@ -22,6 +22,7 @@ class AdaMoCo(nn.Module):
         K=16384,
         m=0.999,
         T_moco=0.07,
+        negative_aug=False,
         checkpoint_path=None,
     ):
         """
@@ -36,6 +37,7 @@ class AdaMoCo(nn.Module):
         self.m = m
         self.T_moco = T_moco
         self.queue_ptr = 0
+        self.negative_aug = negative_aug
 
         # create the encoders
         self.src_model = src_model
@@ -49,10 +51,13 @@ class AdaMoCo(nn.Module):
 
         # create the memory bank
         self.register_buffer("mem_feat", torch.randn(feature_dim, K))
+        self.mem_feat = F.normalize(self.mem_feat, dim=0)
+        if self.negative_aug:
+            self.register_buffer("mem_feat_neg", torch.randn(feature_dim, K))
+            self.mem_feat_neg = F.normalize(self.mem_feat, dim=0)
         self.register_buffer(
             "mem_labels", torch.randint(0, src_model.num_classes, (K,))
         )
-        self.mem_feat = F.normalize(self.mem_feat, dim=0)
 
         if checkpoint_path:
             self.load_from_checkpoint(checkpoint_path)
@@ -81,7 +86,7 @@ class AdaMoCo(nn.Module):
             param_k.data = param_k.data * self.m + param_q.data * (1.0 - self.m)
 
     @torch.no_grad()
-    def update_memory(self, keys, pseudo_labels):
+    def update_memory(self, keys, pseudo_labels, keys_neg=None):
         """
         Update features and corresponding pseudo labels
         """
@@ -95,6 +100,8 @@ class AdaMoCo(nn.Module):
         self.mem_feat[:, idxs_replace] = keys.T
         self.mem_labels[idxs_replace] = pseudo_labels
         self.queue_ptr = end % self.K
+        if keys_neg is not None:
+            self.mem_feat_neg[:, idxs_replace] = keys_neg.T
 
     @torch.no_grad()
     def _batch_shuffle_ddp(self, x):
@@ -143,7 +150,7 @@ class AdaMoCo(nn.Module):
 
         return x_gather[idx_this]
 
-    def forward(self, im_q, im_k=None, cls_only=False):
+    def forward(self, im_q, im_k=None, im_n=None, cls_only=False):
         """
         Input:
             im_q: a batch of query images
@@ -176,6 +183,19 @@ class AdaMoCo(nn.Module):
             # undo shuffle
             k = self._batch_unshuffle_ddp(k, idx_unshuffle)
 
+            if self.negative_aug:
+                # shuffle for making use of BN
+                im_n, idx_unshuffle = self._batch_shuffle_ddp(im_n)
+
+                k_n, _ = self.momentum_model(im_n, return_feats=True)
+                k_n = F.normalize(k_n, dim=1)
+
+                # undo shuffle
+                k_n = self._batch_unshuffle_ddp(k_n, idx_unshuffle)
+            else:
+                k_n = None
+                
+
         # compute logits
         # Einstein sum is more intuitive
         # positive logits: Nx1
@@ -183,11 +203,19 @@ class AdaMoCo(nn.Module):
         # negative logits: NxK
         l_neg = torch.einsum("nc,ck->nk", [q, self.mem_feat.clone().detach()])
 
-        # logits: Nx(1+K)
-        logits_ins = torch.cat([l_pos, l_neg], dim=1)
+        
+        if self.negative_aug:
+            l_neg1 = torch.einsum("nc,ck->nk", [q, self.mem_feat_neg.clone().detach()]) # Negative Data Agumentations from memory
+            l_neg2 = torch.einsum("nc,nc->n", [q, k_n]).unsqueeze(-1) # Negative Data Agumentations
+
+            # logits: Nx(1+K)
+            logits_ins = torch.cat([l_pos, l_neg, l_neg1, l_neg2], dim=1)
+        else:
+            logits_ins = torch.cat([l_pos, l_neg], dim=1)
+
 
         # apply temperature
         logits_ins /= self.T_moco
 
         # dequeue and enqueue will happen outside
-        return feats_q, logits_q, logits_ins, k
+        return feats_q, logits_q, logits_ins, k, k_n
