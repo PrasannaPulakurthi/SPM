@@ -149,6 +149,12 @@ def train_source_domain(args):
             filename = f"best_{args.data.src_domain}_{args.seed}.pth.tar"
             save_path = os.path.join(args.log_dir, filename)
             save_checkpoint(model, optimizer, epoch, save_path=save_path)
+            logging.info(f"Saved checkpoint {save_path}")
+
+
+    # Load the best model 
+    checkpoint = torch.load(save_path)
+    model.load_state_dict(checkpoint['state_dict'])
 
     # evaluate on target before any adaptation
     for t, tgt_domain in enumerate(args.data.target_domains):

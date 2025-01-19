@@ -5,11 +5,14 @@ import time
 
 from tqdm import tqdm
 import torch
+import torch.nn as nn
 import torch.distributed as dist
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 import wandb
+import numpy as np
+from mcc import MinimumClassConfusionLoss
 
 from classifier import Classifier
 from image_list import ImageList
@@ -30,6 +33,8 @@ from utils import (
     ProgressMeter,
 )
 
+CE = nn.CrossEntropyLoss(reduction='none')
+MCC = MinimumClassConfusionLoss(temperature=2.0)
 
 @torch.no_grad()
 def eval_and_label_dataset(dataloader, model, banks, args):
@@ -116,7 +121,7 @@ def eval_and_label_dataset(dataloader, model, banks, args):
     if use_wandb(args):
         wandb.log(wandb_dict)
 
-    return pseudo_item_list, banks
+    return pseudo_item_list, banks, accuracy
 
 
 @torch.no_grad()
@@ -193,8 +198,12 @@ def get_augmentation_versions(args):
             transform_list.append(get_augmentation(args.data.aug_type, args.learn.alpha_spm, args.learn.beta_spm, args.learn.patch_height, args.learn.mix_prob))
         elif version == "w":
             transform_list.append(get_augmentation("plain"))
+        elif version == "n":
+            transform_list.append(get_augmentation("jigsaw"))
         else:
             raise NotImplementedError(f"{version} version not implemented.")
+    if args.learn.negative_aug:
+        transform_list.append(get_augmentation("jigsaw",patch_height=args.learn.patch_height))
     transform = NCropsTransform(transform_list)
 
     return transform
@@ -236,7 +245,7 @@ def get_target_optimizer(model, args):
 
     return optimizer
 
-def preparetrainloader(args,pseudo_item_list):
+def preparetrainloader(args, pseudo_item_list):
     # Training data
     train_transform = get_augmentation_versions(args)
     train_dataset = ImageList(
@@ -253,7 +262,7 @@ def preparetrainloader(args,pseudo_item_list):
         num_workers=args.data.workers,
         pin_memory=True,
         sampler=train_sampler,
-        drop_last=False,
+        drop_last=True,
     )
     return train_loader, train_sampler
 
@@ -289,6 +298,7 @@ def train_target_domain(args):
         K=args.model_tta.queue_size,
         m=args.model_tta.m,
         T_moco=args.model_tta.T_moco,
+        negative_aug=args.learn.negative_aug,
     ).cuda()
     if args.distributed:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
@@ -308,12 +318,12 @@ def train_target_domain(args):
     val_loader = DataLoader(
         val_dataset, batch_size=256, sampler=val_sampler, num_workers=2
     )
-    pseudo_item_list, banks = eval_and_label_dataset(
+    pseudo_item_list, banks, _ = eval_and_label_dataset(
         val_loader, model, banks=None, args=args
     )
     logging.info("2 - Computed initial pseudo labels")
 
-    train_loader, train_sampler = preparetrainloader(args,pseudo_item_list)
+    train_loader, train_sampler = preparetrainloader(args, pseudo_item_list)
 
     args.learn.full_progress = args.learn.epochs * len(train_loader)
     logging.info("3 - Created train/val loader")
@@ -325,6 +335,9 @@ def train_target_domain(args):
     logging.info("Start training...")
     start_alpha = args.learn.alpha_spm
     end_alpha = args.learn.alpha_spm_end
+
+    best_acc = 0
+
     for epoch in range(args.learn.start_epoch, args.learn.epochs):
 
         if args.distributed:
@@ -333,12 +346,21 @@ def train_target_domain(args):
         # train for one epoch
         train_epoch(train_loader, model, banks, optimizer, epoch, args)
 
-        eval_and_label_dataset(val_loader, model, banks, args)
+        _, _, accuracy = eval_and_label_dataset(val_loader, model, banks, args)
         
-        args.learn.alpha_spm = round(args.learn.alpha_spm - (start_alpha-end_alpha)/(args.learn.epochs),2)
-        if args.learn.alpha_spm < 2:
-            args.learn.alpha_spm = 2
-        train_loader, train_sampler = preparetrainloader(args,pseudo_item_list)
+        if accuracy>best_acc:  
+            if is_master(args):
+                best_acc = accuracy
+                filename = f"checkpoint_best_{args.data.src_domain}-{args.data.tgt_domain}-{args.sub_memo}_{args.seed}.pth.tar"
+                save_path_best = os.path.join(args.log_dir, filename)
+                save_checkpoint(model, optimizer, epoch, save_path=save_path_best)
+                logging.info(f"Saved checkpoint {save_path_best}")
+
+        if args.learn.change_alpha:
+            args.learn.alpha_spm = round(args.learn.alpha_spm - (start_alpha-end_alpha)/(args.learn.epochs),2)
+            if args.learn.alpha_spm < 2:
+                args.learn.alpha_spm = 2
+            train_loader, train_sampler = preparetrainloader(args, pseudo_item_list)
         logging.info(f'Alpha Changed to {args.learn.alpha_spm}')
 
     if is_master(args):
@@ -347,6 +369,48 @@ def train_target_domain(args):
         save_checkpoint(model, optimizer, epoch, save_path=save_path)
         logging.info(f"Saved checkpoint {save_path}")
 
+    if args.data.ttd:
+        # Load the best model 
+        checkpoint = torch.load(save_path_best)
+        model.load_state_dict(checkpoint['state_dict'])
+
+        # evaluate on specific target domains
+        for t, tgt_domain in enumerate(args.data.test_target_domain):
+            if tgt_domain == args.data.src_domain:
+                continue
+            label_file = os.path.join(args.data.image_root, f"{tgt_domain}_list.txt")
+            tgt_dataset = ImageList(args.data.image_root, label_file, val_transform)
+            sampler = DistributedSampler(tgt_dataset, shuffle=False) if args.distributed else None
+            tgt_loader = DataLoader(
+                tgt_dataset,
+                batch_size=args.data.batch_size,
+                sampler=sampler,
+                pin_memory=True,
+                num_workers=args.data.workers,
+            )
+
+            logging.info(f"Evaluate {args.data.src_domain} model on {tgt_domain}")
+            logging.info(f"Dataset length: {len(tgt_loader.dataset)}")
+            
+            eval_and_label_dataset(tgt_loader, model, banks, args)
+
+# Define the nonlinear weighting sigmoid-like function
+def confidance_weight(x, c, k=10):
+    return 1 / (1 + torch.exp(-k * (x - c)))
+
+def confidence_margin_reweighting(probs, alpha=1.0):
+    with torch.no_grad():
+        # Sort probabilities to get top 2 probabilities for each sample
+        top_probs, _ = torch.topk(probs, k=2, dim=1)
+        margin = top_probs[:, 0] - top_probs[:, 1]  # Compute confidence margin
+        
+        # Normalize margins to [0, 1] 
+        normalized_margin = margin / torch.max(margin) 
+
+        # Compute reweighting factors 
+        weights = margin * torch.exp(alpha * normalized_margin)
+    
+    return weights
 
 def train_epoch(train_loader, model, banks, optimizer, epoch, args):
     batch_time = AverageMeter("Time", ":6.3f")
@@ -361,6 +425,7 @@ def train_epoch(train_loader, model, banks, optimizer, epoch, args):
 
     # make sure to switch to train mode
     model.train()
+    torch.autograd.set_detect_anomaly(True)
 
     end = time.time()
     zero_tensor = torch.tensor([0.0]).to("cuda")
@@ -374,51 +439,73 @@ def train_epoch(train_loader, model, banks, optimizer, epoch, args):
             images[2].to("cuda"),
         )
 
+        if args.learn.negative_aug:
+            images_n = images[3].to("cuda")
+        else:
+            images_n = None
+
         # per-step scheduler
         step = i + epoch * len(train_loader)
         adjust_learning_rate(optimizer, step, args)
 
         feats_w, logits_w = model(images_w, cls_only=True)
+
         with torch.no_grad():
             probs_w = F.softmax(logits_w, dim=1)
             pseudo_labels_w, probs_w, _ = refine_predictions(
                 feats_w, probs_w, banks, args=args
             )
 
-        _, logits_q, logits_ins, keys = model(images_q, images_k)
+        _, logits_q, logits_ins, keys, keys_neg = model(images_q, images_k, images_n)
         # update key features and corresponding pseudo labels
-        model.update_memory(keys, pseudo_labels_w)
+        model.update_memory(keys, pseudo_labels_w, keys_neg)
 
         # moco instance discrimination
         loss_ins, accuracy_ins = instance_loss(
             logits_ins=logits_ins,
             pseudo_labels=pseudo_labels_w,
             mem_labels=model.mem_labels,
-            contrast_type=args.learn.contrast_type,
+            args=args,
         )
         # instance accuracy shown for only one process to give a rough idea
         top1_ins.update(accuracy_ins.item(), len(logits_ins))
 
         # classification
+        '''
         loss_cls, accuracy_psd = classification_loss(
             logits_w, logits_q, pseudo_labels_w, args
         )
+        '''
+
+        if args.learn.reweighting:
+            with torch.no_grad():
+                # probs_argmax, _ = torch.max(probs_w, 1)
+                # w = confidance_weight(probs_argmax,args.learn.c)
+                w = confidence_margin_reweighting(probs_w)
+            loss_cls = (w * CE(logits_q, pseudo_labels_w)).mean()
+        else:
+            loss_cls = (CE(logits_q, pseudo_labels_w)).mean()
+
+        accuracy_psd = calculate_acc(logits_q, pseudo_labels_w)
         top1_psd.update(accuracy_psd.item(), len(logits_w))
 
         # diversification
         loss_div = (
             diversification_loss(logits_w, logits_q, args)
-            if args.learn.eta > 0
-            else zero_tensor
         )
 
         loss = (
-            args.learn.alpha * loss_cls
-            + args.learn.beta * loss_ins
-            + args.learn.eta * loss_div
+            args.learn.lambda_cls * loss_cls
+            + args.learn.lambda_ins * loss_ins
+            + args.learn.lambda_div * loss_div
         )
-        loss_meter.update(loss.item())
 
+        if args.learn.mcc:
+            # mcc
+            loss_mcc = MCC(logits_q)
+            loss = loss + loss_mcc
+        
+        loss_meter.update(loss.item())
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -431,9 +518,9 @@ def train_epoch(train_loader, model, banks, optimizer, epoch, args):
 
         if use_wandb(args):
             wandb_dict = {
-                "loss_cls": args.learn.alpha * loss_cls.item(),
-                "loss_ins": args.learn.beta * loss_ins.item(),
-                "loss_div": args.learn.eta * loss_div.item(),
+                "loss_cls": args.learn.lambda_cls * loss_cls.item(),
+                "loss_ins": args.learn.lambda_ins * loss_ins.item(),
+                "loss_div": args.learn.lambda_div * loss_div.item(),
                 "acc_ins": accuracy_ins.item(),
             }
 
@@ -453,18 +540,20 @@ def calculate_acc(logits, labels):
     return accuracy
 
 
-def instance_loss(logits_ins, pseudo_labels, mem_labels, contrast_type):
+def instance_loss(logits_ins, pseudo_labels, mem_labels, args):
+    contrast_type = args.learn.contrast_type
+    k = args.model_tta.queue_size
     # labels: positive key indicators
     labels_ins = torch.zeros(logits_ins.shape[0], dtype=torch.long).cuda()
 
     # in class_aware mode, do not contrast with same-class samples
     if contrast_type == "class_aware" and pseudo_labels is not None:
         mask = torch.ones_like(logits_ins, dtype=torch.bool)
-        mask[:, 1:] = pseudo_labels.reshape(-1, 1) != mem_labels  # (B, K)
+        mask[:, 1:k+1] = pseudo_labels.reshape(-1, 1) != mem_labels  # (B, K)
+        mask[:, k:] = False
         logits_ins = torch.where(mask, logits_ins, torch.tensor([float("-inf")]).cuda())
 
     loss = F.cross_entropy(logits_ins, labels_ins)
-
     accuracy = calculate_acc(logits_ins, labels_ins)
 
     return loss, accuracy

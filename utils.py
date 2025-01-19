@@ -13,12 +13,13 @@ from torchvision import transforms
 
 from moco.loader import GaussianBlur
 import numpy as np
-from SPM import ShufflePatchMix
+from spm import ShufflePatchMix, ShufflePatchMix_l, JigsawPuzzle, JigsawPuzzle_l, ShufflePatchMix_all, ShufflePatchMix_l_all
+from spm import ShufflePatchMixOverlap, ShufflePatchMixOverlap_l, ShufflePatchMixOverlap_all, ShufflePatchMixOverlap_l_all
 
 LOG_FORMAT = "[%(levelname)s] %(asctime)s %(filename)s:%(lineno)s %(message)s"
 LOG_DATEFMT = "%Y-%m-%d %H:%M:%S"
 
-NUM_CLASSES = {"domainnet-126": 126, "VISDA-C": 12}
+NUM_CLASSES = {"domainnet-126": 126, "VISDA-C": 12, "PACS": 7}
 
 import torch
 import numpy as np
@@ -159,7 +160,7 @@ def get_categories(category_file):
     return categories
 
 
-def get_augmentation(aug_type, alpha=2.0, beta=2.0, patch_height=28, mix_prob=0.8, normalize=None):
+def get_augmentation(aug_type, alpha=8.0, beta=2.0, patch_height=112, mix_prob=0.8, normalize=None, kernel_size=3):
     if not normalize:
         normalize = transforms.Normalize(
             mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
@@ -234,12 +235,230 @@ def get_augmentation(aug_type, alpha=2.0, beta=2.0, patch_height=28, mix_prob=0.
                 normalize,
             ]
         )
+    elif aug_type == "shuffle_patch_mix_l":
+        return transforms.Compose(
+            [
+                transforms.RandomResizedCrop(224, scale=(0.2, 1.0)),
+                transforms.RandomApply(
+                    [transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)],
+                    p=0.8,  # not strengthened
+                ),
+                transforms.RandomGrayscale(p=0.2),
+                ShufflePatchMix_l(patch_height=patch_height, patch_width=patch_height, mix_prob=mix_prob, alpha=alpha, beta=beta),
+                transforms.RandomApply([GaussianBlur([0.1, 2.0])], p=0.5),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+    elif aug_type == "shuffle_patch_mix_all":
+        return transforms.Compose(
+            [
+                transforms.RandomResizedCrop(224, scale=(0.2, 1.0)),
+                transforms.RandomApply(
+                    [transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)],
+                    p=0.8,  # not strengthened
+                ),
+                transforms.RandomGrayscale(p=0.2),
+                ShufflePatchMix_all(patch_height=patch_height, patch_width=patch_height, mix_prob=mix_prob, alpha=alpha, beta=beta),
+                transforms.RandomApply([GaussianBlur([0.1, 2.0])], p=0.5),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+    elif aug_type == "shuffle_patch_mix_l_all":
+        return transforms.Compose(
+            [
+                transforms.RandomResizedCrop(224, scale=(0.2, 1.0)),
+                transforms.RandomApply(
+                    [transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)],
+                    p=0.8,  # not strengthened
+                ),
+                transforms.RandomGrayscale(p=0.2),
+                ShufflePatchMix_l_all(patch_height=patch_height, patch_width=patch_height, mix_prob=mix_prob, alpha=alpha, beta=beta),
+                transforms.RandomApply([GaussianBlur([0.1, 2.0])], p=0.5),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+    elif aug_type == "shuffle_patch_mix_o":
+        return transforms.Compose(
+            [
+                transforms.RandomResizedCrop(224, scale=(0.2, 1.0)),
+                transforms.RandomApply(
+                    [transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)],
+                    p=0.8,  # not strengthened
+                ),
+                transforms.RandomGrayscale(p=0.2),
+                ShufflePatchMixOverlap(patch_height=patch_height, patch_width=patch_height, mix_prob=mix_prob, alpha=alpha, beta=beta),
+                transforms.RandomApply([GaussianBlur([0.1, 2.0])], p=0.5),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+    elif aug_type == "shuffle_patch_mix_o_l":
+        return transforms.Compose(
+            [
+                transforms.RandomResizedCrop(224, scale=(0.2, 1.0)),
+                transforms.RandomApply(
+                    [transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)],
+                    p=0.8,  # not strengthened
+                ),
+                transforms.RandomGrayscale(p=0.2),
+                ShufflePatchMixOverlap_l(patch_height=patch_height, patch_width=patch_height, mix_prob=mix_prob, alpha=alpha, beta=beta),
+                transforms.RandomApply([GaussianBlur([0.1, 2.0])], p=0.5),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+    elif aug_type == "shuffle_patch_mix_o_all":
+        return transforms.Compose(
+            [
+                transforms.RandomResizedCrop(224, scale=(0.2, 1.0)),
+                transforms.RandomApply(
+                    [transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)],
+                    p=0.8,  # not strengthened
+                ),
+                transforms.RandomGrayscale(p=0.2),
+                ShufflePatchMixOverlap_all(patch_height=patch_height, patch_width=patch_height, mix_prob=mix_prob, alpha=alpha, beta=beta),
+                transforms.RandomApply([GaussianBlur([0.1, 2.0])], p=0.5),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+    elif aug_type == "shuffle_patch_mix_o_l_all":
+        return transforms.Compose(
+            [
+                transforms.RandomResizedCrop(224, scale=(0.2, 1.0)),
+                transforms.RandomApply(
+                    [transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)],
+                    p=0.8,  # not strengthened
+                ),
+                transforms.RandomGrayscale(p=0.2),
+                ShufflePatchMixOverlap_l_all(patch_height=patch_height, patch_width=patch_height, mix_prob=mix_prob, alpha=alpha, beta=beta),
+                transforms.RandomApply([GaussianBlur([0.1, 2.0])], p=0.5),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+    elif aug_type == "shuffle_patch_mix_pre":
+        return transforms.Compose(
+            [
+                transforms.Resize((256, 256)),
+                transforms.CenterCrop(224),
+                ShufflePatchMix(patch_height=patch_height, patch_width=patch_height, mix_prob=mix_prob, alpha=alpha, beta=beta),
+                transforms.RandomResizedCrop(224, scale=(0.2, 1.0)),
+                transforms.RandomApply(
+                    [transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)],
+                    p=0.8,  # not strengthened
+                ),
+                transforms.RandomGrayscale(p=0.2),
+                transforms.RandomApply([GaussianBlur([0.1, 2.0])], p=0.5),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+    elif aug_type == "shuffle_patch_mix_pre_all":
+        return transforms.Compose(
+            [
+                transforms.Resize((256, 256)),
+                transforms.CenterCrop(224),
+                ShufflePatchMix_all(patch_height=patch_height, patch_width=patch_height, mix_prob=mix_prob, alpha=alpha, beta=beta),
+                transforms.RandomResizedCrop(224, scale=(0.2, 1.0)),
+                transforms.RandomApply(
+                    [transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)],
+                    p=0.8,  # not strengthened
+                ),
+                transforms.RandomGrayscale(p=0.2),
+                transforms.RandomApply([GaussianBlur([0.1, 2.0])], p=0.5),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+    elif aug_type == "shuffle_patch_mix_pre_l":
+        return transforms.Compose(
+            [
+                transforms.Resize((256, 256)),
+                transforms.CenterCrop(224),
+                ShufflePatchMix_l(patch_height=patch_height, patch_width=patch_height, mix_prob=mix_prob, alpha=alpha, beta=beta),
+                transforms.RandomResizedCrop(224, scale=(0.2, 1.0)),
+                transforms.RandomApply(
+                    [transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)],
+                    p=0.8,  # not strengthened
+                ),
+                transforms.RandomGrayscale(p=0.2),
+                transforms.RandomApply([GaussianBlur([0.1, 2.0])], p=0.5),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
     elif aug_type == "spm":
         return transforms.Compose(
             [
                 transforms.Resize((256, 256)),
                 transforms.CenterCrop(224),
-                ShufflePatchMix(patch_height=patch_height, patch_width=patch_height, mix_prob=1.0, alpha=alpha, beta=beta),
+                ShufflePatchMix(patch_height=patch_height, patch_width=patch_height, mix_prob=1, alpha=alpha, beta=beta),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+    elif aug_type == "spm_l":
+        return transforms.Compose(
+            [
+                transforms.Resize((256, 256)),
+                transforms.CenterCrop(224),
+                ShufflePatchMix_l(patch_height=patch_height, patch_width=patch_height, mix_prob=1, alpha=alpha, beta=beta),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+    elif aug_type == "spm_o":
+        return transforms.Compose(
+            [
+                transforms.Resize((256, 256)),
+                transforms.CenterCrop(224),
+                ShufflePatchMixOverlap(patch_height=patch_height, patch_width=patch_height, mix_prob=1, alpha=alpha, beta=beta),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+    elif aug_type == "spm_o_l":
+        return transforms.Compose(
+            [
+                transforms.Resize((256, 256)),
+                transforms.CenterCrop(224),
+                ShufflePatchMixOverlap_l(patch_height=patch_height, patch_width=patch_height, mix_prob=1, alpha=alpha, beta=beta),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+    elif aug_type == "jigsaw":
+        return transforms.Compose(
+            [
+                transforms.Resize((256, 256)),
+                transforms.CenterCrop(224),
+                # transforms.RandomHorizontalFlip(),
+                JigsawPuzzle(patch_height=patch_height, patch_width=patch_height),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+    elif aug_type == "jigsaw_l":
+        return transforms.Compose(
+            [
+                transforms.Resize((256, 256)),
+                transforms.CenterCrop(224),
+                # transforms.RandomHorizontalFlip(),
+                JigsawPuzzle_l(patch_height=patch_height, patch_width=patch_height),
                 transforms.ToTensor(),
                 normalize,
             ]
