@@ -1,3 +1,2 @@
 set CUBLAS_WORKSPACE_CONFIG=:4096:8
-python main_adacontrast_win.py seed=2022 port=10000 memo="target" project="VISDA-C" learn.epochs=50 learn.alpha_spm=4.0 learn.alpha_spm_end=2.0 learn.beta_spm=2.0 learn.patch_height=56 data.data_root="datasets" data.batch_size=64 data.workers=4 data.dataset="VISDA-C" data.aug_type="shuffle_patch_mix" data.source_domains="[train]" data.target_domains="[validation]" model_src.arch="resnet101" model_tta.src_log_dir="output\VISDA-C\source" optim.lr=2e-4
-
+python main_adacontrast_win.py seed=2022 port=10000 memo="target" project="VISDA-C" learn.epochs=50 learn.alpha_spm=8.0 learn.beta_spm=2.0 learn.patch_height=56 data.data_root="datasets" data.batch_size=64 data.workers=8 data.dataset="VISDA-C" data.aug_type="shuffle_patch_mix_o" data.source_domains="[train]" data.target_domains="[validation]" model_src.arch="resnet101" model_tta.src_log_dir="output\VISDA-C\source" optim.lr=2e-4 learn.change_alpha=true learn.reweighting=true
