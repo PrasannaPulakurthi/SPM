@@ -5,8 +5,11 @@ source_domains:
   - "real"
 target_domains:
   - "sketch"
+ttd: false
+test_target_domain:
+  - "sketch"
 pl_list: null         # cached initial pseudo labels to save time
-aug_type: "moco-v2"   # used in TTA contrastive learning
+aug_type: "moco-v2"   # used in TTA contrastive learning ["moco-v2, shuffle_patch_mix"]
 
 batch_size: 128
-workers: 4
+workers: 8
