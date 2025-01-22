@@ -487,7 +487,7 @@ def train_epoch(train_loader, model, banks, optimizer, epoch, args):
         loss_div = (
             diversification_loss(logits_w, logits_q, args)
         )
-
+        
         loss = (
             args.learn.lambda_cls * loss_cls
             + args.learn.lambda_ins * loss_ins
