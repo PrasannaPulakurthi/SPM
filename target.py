@@ -408,7 +408,8 @@ def confidence_margin_reweighting(probs, alpha=1.0):
         normalized_margin = margin / torch.max(margin) 
 
         # Compute reweighting factors 
-        weights = margin * torch.exp(alpha * normalized_margin)
+        # weights = margin * torch.exp(alpha * normalized_margin)
+        weights = top_probs[:, 0] * margin * torch.exp(alpha * normalized_margin)
     
     return weights
 
