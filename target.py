@@ -394,10 +394,6 @@ def train_target_domain(args):
             
             eval_and_label_dataset(tgt_loader, model, banks, args)
 
-# Define the nonlinear weighting sigmoid-like function
-def confidance_weight(x, c, k=10):
-    return 1 / (1 + torch.exp(-k * (x - c)))
-
 def confidence_margin_reweighting(probs, alpha=1.0):
     with torch.no_grad():
         # Sort probabilities to get top 2 probabilities for each sample
@@ -408,7 +404,6 @@ def confidence_margin_reweighting(probs, alpha=1.0):
         normalized_margin = margin / torch.max(margin) 
 
         # Compute reweighting factors 
-        # weights = margin * torch.exp(alpha * normalized_margin)
         weights = top_probs[:, 0] * margin * torch.exp(alpha * normalized_margin)
     
     return weights
@@ -480,8 +475,6 @@ def train_epoch(train_loader, model, banks, optimizer, epoch, args):
 
         if args.learn.reweighting:
             with torch.no_grad():
-                # probs_argmax, _ = torch.max(probs_w, 1)
-                # w = confidance_weight(probs_argmax,args.learn.c)
                 w = confidence_margin_reweighting(probs_w)
             loss_cls = (w * CE(logits_q, pseudo_labels_w)).mean()
         else:
