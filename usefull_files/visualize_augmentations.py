@@ -7,7 +7,21 @@ from torchvision.utils import make_grid
 from moco.loader import NCropsTransform
 from utils import get_augmentation
 from image_list import ImageList
+import random
+import numpy as np
+import torch
 from torchvision.utils import save_image
+
+# Function to set seed values
+def set_seed(seed):
+    """Set seed for reproducibility."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # if you are using multi-GPU.
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 def unnormalize(tensor, mean, std):
     """Unnormalize a tensor image."""
@@ -30,10 +44,10 @@ def get_augmentation_versions_patches(name):
 def get_augmentation_versions_a(name):
     transform_list = [
         get_augmentation("test"),
-        get_augmentation(name, alpha=16.0, beta=2.0, patch_height=14), 
-        get_augmentation(name, alpha=8.0, beta=2.0, patch_height=14), 
-        get_augmentation(name, alpha=4.0, beta=2.0, patch_height=14), 
-        get_augmentation(name, alpha=2.0, beta=2.0, patch_height=14), 
+        get_augmentation(name, alpha=16.0, beta=2.0, patch_height=56), 
+        get_augmentation(name, alpha=8.0, beta=2.0, patch_height=56), 
+        get_augmentation(name, alpha=4.0, beta=2.0, patch_height=56), 
+        get_augmentation(name, alpha=2.0, beta=2.0, patch_height=56), 
     ]
     return NCropsTransform(transform_list)
 
@@ -82,7 +96,19 @@ def main(train_transform, folder_name):
             save_image(image, f"output/visualize/{folder_name}/image_{i}.png")
 
 if __name__ == '__main__':
-    
+    # Set seed for reproducibility
+    set_seed(42)
+
+    # Different PatchMix strength
+    # train_transform = get_augmentation_versions_a("spm")
+    # main(train_transform,"strength_spm")
+
+    train_transform = get_augmentation_versions_a("spm_o")
+    main(train_transform,"strength_spm_o")
+
+    quit()
+
+    # Different patch sizes
     train_transform = get_augmentation_versions_patches("spm")
     main(train_transform,"spm")
 
