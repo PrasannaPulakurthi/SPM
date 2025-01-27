@@ -4,6 +4,7 @@ momentum: 0.9
 weight_decay: 1e-4
 nesterov: true
 
+lr_decay: false
 cos: true
 exp: false
 schedule: [10, 20]

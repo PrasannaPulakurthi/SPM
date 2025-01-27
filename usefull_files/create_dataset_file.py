@@ -27,6 +27,7 @@ for domain in domains:
                 for image_file in os.listdir(class_path):
                     if image_file.endswith(('.jpg', '.png', '.jpeg')):  # Filter for image files
                         file_path = os.path.join(domain, class_name, image_file)
+                        file_path = file_path.replace("\\", "/")
                         txt_file.write(f"{file_path} {class_number}\n")
 
 print("Text files generated for each domain!")
