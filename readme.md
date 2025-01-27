@@ -40,7 +40,7 @@ ${DATA_ROOT}
 ### **Training**
 The [hydra](https://github.com/facebookresearch/hydra) is used as the configuration system. By default, the working directory is `./output`, which can be changed directly from `configs/root.yaml` or via hydra command line interface `workdir=${WORK_DIR}`.
 
-VISDA-C experiments are done for `train` to `validation` adaptation. Before the adaptation, we should have the source model. You may train the source model with script `scripts/train_VISDA-C_source.sh` as shown below. The pre-trained source models for seed 2022 can be [downloaded from here](https://drive.google.com/drive/folders/1i_orPbG753tJ220oLLKi4hAgSudBCLOC?usp=sharing).
+VISDA-C experiments are done for `train` to `validation` adaptation. Before the adaptation, we should have the source model. You may train the source model with script `scripts/train_VISDA-C_source.sh` as shown below. The pre-trained source models for seed 2022 can be [downloaded from here](https://drive.google.com/drive/folders/16vTNNzzAt4M1mmeLsOxSFDRzBogaNkJw?usp=sharing).
 
 After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_VISDA-C_target.sh` to execute the adaptation.
 
@@ -85,7 +85,7 @@ ${DATA_ROOT}
 ### **Training**
 The [hydra](https://github.com/facebookresearch/hydra) is used as the configuration system. By default, the working directory is `./output`, which can be changed directly from `configs/root.yaml` or via hydra command line interface `workdir=${WORK_DIR}`.
 
-DomainNet-126 experiments are done for 7 domain shifts constructed from combinations of `Real`, `Sketch`, `Clipart`, and `Painting`. Before the adaptation, we should have the source model. You may train the source model with script `scripts/train_domainnet-126_source.sh` as shown below. The pre-trained source models for seed 2022 can be [downloaded from here](https://drive.google.com/drive/folders/1i_orPbG753tJ220oLLKi4hAgSudBCLOC?usp=sharing).
+DomainNet-126 experiments are done for 7 domain shifts constructed from combinations of `Real`, `Sketch`, `Clipart`, and `Painting`. Before the adaptation, we should have the source model. You may train the source model with script `scripts/train_domainnet-126_source.sh` as shown below. The pre-trained source models for seed 2022 can be [downloaded from here](https://drive.google.com/drive/folders/16vTNNzzAt4M1mmeLsOxSFDRzBogaNkJw?usp=sharing).
 
 After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_domainnet-126_target.sh` to execute the adaptation.
 

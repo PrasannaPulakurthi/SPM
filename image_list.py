@@ -50,6 +50,7 @@ class ImageList(Dataset):
             img_path = os.path.join(self.image_root, img_file)
             label = int(label)
             item_list.append((img_path, label, img_file))
+
         return item_list
 
     def __getitem__(self, idx):
