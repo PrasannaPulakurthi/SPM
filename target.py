@@ -12,7 +12,6 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 import wandb
 import numpy as np
-from mcc import MinimumClassConfusionLoss
 
 from classifier import Classifier
 from image_list import ImageList
@@ -34,7 +33,6 @@ from utils import (
 )
 
 CE = nn.CrossEntropyLoss(reduction='none')
-MCC = MinimumClassConfusionLoss(temperature=2.0)
 
 @torch.no_grad()
 def eval_and_label_dataset(dataloader, model, banks, args):
@@ -394,17 +392,20 @@ def train_target_domain(args):
             
             eval_and_label_dataset(tgt_loader, model, banks, args)
 
-def update_w(progress, w_in, args):
-        # Initialize lambda_cls to 0 at the start
-        w0 = 1
-        w_p = w_in
-        gamma = 1/len(args.optim.schedule)
-        # Step decay logic
-        for milestone in args.optim.schedule:
-            if progress >= milestone:
-                gamma += gamma
+def update_w(epoch, w_in, args):
+        scale = 0
+        steps = range(args.learn.schedule[0],args.learn.schedule[1])
+        if epoch < args.learn.schedule[0]:
+            scale = 0
+        elif epoch >= args.learn.schedule[1]:
+            scale = 1
+        else:
+            # Step decay logic
+            for milestone in steps:
+                if epoch >= milestone:
+                    scale += 1/len(steps)
 
-        return (w0 * (1-gamma) + w_p * gamma)
+        return (w_in * scale + 1 * (1-scale))
 
 def train_epoch(train_loader, model, banks, optimizer, epoch, args):
     batch_time = AverageMeter("Time", ":6.3f")
@@ -476,6 +477,7 @@ def train_epoch(train_loader, model, banks, optimizer, epoch, args):
             with torch.no_grad():
                 w = confidence_margin_reweighting(probs_w)
                 # w = entropy_reweighting(probs_w)
+                w = update_w(epoch, w, args)
             loss_cls = (w * CE(logits_q, pseudo_labels_w)).mean()
         else:
             loss_cls = (CE(logits_q, pseudo_labels_w)).mean()
@@ -496,11 +498,6 @@ def train_epoch(train_loader, model, banks, optimizer, epoch, args):
             + args.learn.lambda_ins * loss_ins
             + args.learn.lambda_div * loss_div
         )
-
-        if args.learn.mcc:
-            # mcc
-            loss_mcc = MCC(logits_q)
-            loss = loss + loss_mcc
         
         loss_meter.update(loss.item())
         optimizer.zero_grad()
@@ -519,6 +516,7 @@ def train_epoch(train_loader, model, banks, optimizer, epoch, args):
                 "loss_ins": args.learn.lambda_ins * loss_ins.item(),
                 "loss_div": args.learn.lambda_div * loss_div.item(),
                 "acc_ins": accuracy_ins.item(),
+                "acc_pseudo-labels": accuracy_psd.item(),
             }
 
             wandb.log(wandb_dict, commit=(i != len(train_loader) - 1))
