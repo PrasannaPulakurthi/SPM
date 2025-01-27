@@ -9,10 +9,10 @@ ce_type: "standard" # ["standard", "symmetric", "smoothed", "soft"]
 lambda_cls: 1.0
 lambda_ins: 1.0
 lambda_div: 1.0
-mcc: false
-reweighting: false
-c: 0.25
 negative_aug: false
+reweighting: false
+schedule: [5, 15]
+c: 0.25
 
 # algo-related stuff
 aug_versions: "wss" # ["w", "ws", "wss", "ss", "wssn"]
