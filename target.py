@@ -394,19 +394,17 @@ def train_target_domain(args):
             
             eval_and_label_dataset(tgt_loader, model, banks, args)
 
-def confidence_margin_reweighting(probs, alpha=1.0):
-    with torch.no_grad():
-        # Sort probabilities to get top 2 probabilities for each sample
-        top_probs, _ = torch.topk(probs, k=2, dim=1)
-        margin = top_probs[:, 0] - top_probs[:, 1]  # Compute confidence margin
-        
-        # Normalize margins to [0, 1] 
-        normalized_margin = margin / torch.max(margin) 
+def update_w(progress, w_in, args):
+        # Initialize lambda_cls to 0 at the start
+        w0 = 1
+        w_p = w_in
+        gamma = 1/len(args.optim.schedule)
+        # Step decay logic
+        for milestone in args.optim.schedule:
+            if progress >= milestone:
+                gamma += gamma
 
-        # Compute reweighting factors 
-        weights = top_probs[:, 0] * margin * torch.exp(alpha * normalized_margin)
-    
-    return weights
+        return (w0 * (1-gamma) + w_p * gamma)
 
 def train_epoch(train_loader, model, banks, optimizer, epoch, args):
     batch_time = AverageMeter("Time", ":6.3f")
@@ -441,8 +439,9 @@ def train_epoch(train_loader, model, banks, optimizer, epoch, args):
             images_n = None
 
         # per-step scheduler
-        step = i + epoch * len(train_loader)
-        adjust_learning_rate(optimizer, step, args)
+        if args.optim.lr_decay:
+            step = i + epoch * len(train_loader)
+            adjust_learning_rate(optimizer, step, args)
 
         feats_w, logits_w = model(images_w, cls_only=True)
 
@@ -476,6 +475,7 @@ def train_epoch(train_loader, model, banks, optimizer, epoch, args):
         if args.learn.reweighting:
             with torch.no_grad():
                 w = confidence_margin_reweighting(probs_w)
+                # w = entropy_reweighting(probs_w)
             loss_cls = (w * CE(logits_q, pseudo_labels_w)).mean()
         else:
             loss_cls = (CE(logits_q, pseudo_labels_w)).mean()
@@ -488,6 +488,9 @@ def train_epoch(train_loader, model, banks, optimizer, epoch, args):
             diversification_loss(logits_w, logits_q, args)
         )
         
+        # Increase lambda_cls from 0 to 1 using step decay
+        # lambda_cls = update_lambda_cls(step, args)
+
         loss = (
             args.learn.lambda_cls * loss_cls
             + args.learn.lambda_ins * loss_ins
@@ -610,3 +613,33 @@ def entropy_minimization(logits):
 
     loss = ents.mean()
     return loss
+
+
+def confidence_margin_reweighting(probs):
+    with torch.no_grad():
+        # Sort probabilities to get top 2 probabilities for each sample
+        top_probs, _ = torch.topk(probs, k=2, dim=1)
+        confidence = top_probs[:, 0]                # Compute confidence 
+        margin = confidence - top_probs[:, 1]  # Compute margin
+        cm = confidence + margin
+        
+        # Normalize to [0, 1] 
+        normalized_margin = margin / torch.max(margin) 
+        normalized_confidence = confidence / torch.max(confidence) 
+        normalized_cm = cm / torch.max(cm) 
+
+        # Compute reweighting factors 
+        weights = margin * torch.exp(normalized_confidence)
+    
+    return weights
+
+def entropy(p, axis=1):
+    return -torch.sum(p * torch.log2(p+1e-5), dim=axis)
+
+def entropy_reweighting(probs):
+        num_classes = probs.shape[1]
+        with torch.no_grad():
+            #CE weights
+            max_entropy = torch.log2(torch.tensor(num_classes, dtype=torch.float32))
+            weight = torch.exp( - entropy(probs) / max_entropy)
+        return weight

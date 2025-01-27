@@ -174,7 +174,7 @@ def get_augmentation(aug_type, alpha=8.0, beta=2.0, patch_height=112, mix_prob=0
                     p=0.8,  # not strengthened
                 ),
                 transforms.RandomGrayscale(p=0.2),
-                transforms.RandomApply([GaussianBlur([0.1, 1.5])], p=0.5),
+                transforms.RandomApply([GaussianBlur([0.1, 2.0])], p=0.5),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
                 normalize,
