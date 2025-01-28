@@ -13,6 +13,9 @@ from torch.utils.data.distributed import DistributedSampler
 import wandb
 import numpy as np
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 from classifier import Classifier
 from image_list import ImageList
 from moco.builder import AdaMoCo
@@ -336,6 +339,11 @@ def train_target_domain(args):
 
     best_acc = 0
 
+    # Makes sure the code runs for minimum of 3K Iterations
+    if args.learn.iterations > args.learn.epochs * (len(train_loader)):
+        args.learn.epochs = int(args.learn.iterations / len(train_loader))
+    logging.info(f"5 - Number of Epochs = {args.learn.epochs}")
+
     for epoch in range(args.learn.start_epoch, args.learn.epochs):
 
         if args.distributed:
@@ -392,20 +400,22 @@ def train_target_domain(args):
             
             eval_and_label_dataset(tgt_loader, model, banks, args)
 
-def update_w(epoch, w_in, args):
-        scale = 0
-        steps = range(args.learn.schedule[0],args.learn.schedule[1])
-        if epoch < args.learn.schedule[0]:
-            scale = 0
-        elif epoch >= args.learn.schedule[1]:
-            scale = 1
-        else:
-            # Step decay logic
-            for milestone in steps:
-                if epoch >= milestone:
-                    scale += 1/len(steps)
+def update_w(iteration, w_in, args):
+    schedule_start, schedule_end = args.learn.schedule
+    scale = 0
 
-        return (w_in * scale + 1 * (1-scale))
+    if iteration <= schedule_start:
+        scale = 0
+    elif iteration > schedule_end:
+        scale = 1
+    else:
+        # Calculate step decay directly
+        total_steps = (schedule_end - schedule_start) // 10
+        step_size = 1 / total_steps
+        scale = ((iteration - schedule_start) // 10) * step_size
+
+    return w_in * scale + (1 - scale)
+
 
 def train_epoch(train_loader, model, banks, optimizer, epoch, args):
     batch_time = AverageMeter("Time", ":6.3f")
@@ -477,7 +487,11 @@ def train_epoch(train_loader, model, banks, optimizer, epoch, args):
             with torch.no_grad():
                 w = confidence_margin_reweighting(probs_w)
                 # w = entropy_reweighting(probs_w)
-                w = update_w(epoch, w, args)
+                step = i + epoch * len(train_loader)
+                w = update_w(step, w, args)
+                if i==0:
+                    None
+                    # visualize_confidence_margin(probs_w,epoch,args)
             loss_cls = (w * CE(logits_q, pseudo_labels_w)).mean()
         else:
             loss_cls = (CE(logits_q, pseudo_labels_w)).mean()
@@ -613,6 +627,40 @@ def entropy_minimization(logits):
     return loss
 
 
+def visualize_confidence_margin(probs, epoch, args):
+    # Ensure the visualize directory exists
+    visualize_dir = os.path.join(args.log_dir, 'visualize')
+    os.makedirs(visualize_dir, exist_ok=True)
+
+    with torch.no_grad():
+        # Sort probabilities to get top 2 probabilities for each sample
+        top_probs, _ = torch.topk(probs, k=2, dim=1)
+        confidence = top_probs[:, 0]  # Top confidence value
+        margin = confidence - top_probs[:, 1]  # Confidence margin
+
+    # Prepare data for plotting
+    confidence_np = confidence.cpu().numpy()
+    margin_np = margin.cpu().numpy()
+
+    # Create the joint plot
+    plt.figure(figsize=(8, 6))
+    joint_plot = sns.jointplot(x=confidence_np, y=margin_np, kind="scatter", color="blue")
+    joint_plot.ax_joint.set_xlim(0, 1)  # Set x-axis limit
+    joint_plot.ax_joint.set_ylim(0, 1)  # Set y-axis limit
+
+    # Add labels and title
+    joint_plot.set_axis_labels("Confidence", "Margin")
+    plt.suptitle(f"Joint Distribution of Confidence and Margin (Epoch {epoch})", y=1.02)
+
+    # Save the plot
+    filename = f"{epoch}.png"
+    save_path = os.path.join(visualize_dir, filename)
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.close()
+
+    print(f"Visualization saved to: {save_path}")
+
+
 def confidence_margin_reweighting(probs):
     with torch.no_grad():
         # Sort probabilities to get top 2 probabilities for each sample
@@ -627,12 +675,14 @@ def confidence_margin_reweighting(probs):
         normalized_cm = cm / torch.max(cm) 
 
         # Compute reweighting factors 
-        weights = margin * torch.exp(normalized_confidence)
+        weights = confidence * margin * torch.exp(normalized_margin)
     
     return weights
 
+
 def entropy(p, axis=1):
     return -torch.sum(p * torch.log2(p+1e-5), dim=axis)
+
 
 def entropy_reweighting(probs):
         num_classes = probs.shape[1]
