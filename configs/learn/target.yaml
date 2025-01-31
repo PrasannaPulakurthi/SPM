@@ -13,7 +13,6 @@ lambda_div: 1.0
 negative_aug: false
 reweighting: false
 schedule: [500, 1000]
-c: 0.25
 reweighting_type: "m" #[m, c ,mc ,m_norm ,c_norm ,mc_norm]
 
 # algo-related stuff
