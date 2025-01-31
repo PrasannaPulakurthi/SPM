@@ -485,13 +485,13 @@ def train_epoch(train_loader, model, banks, optimizer, epoch, args):
 
         if args.learn.reweighting:
             with torch.no_grad():
-                w = confidence_margin_reweighting(probs_w)
+                w = confidence_margin_reweighting(probs_w,args)
                 # w = entropy_reweighting(probs_w)
                 step = i + epoch * len(train_loader)
                 w = update_w(step, w, args)
                 if i==0:
                     None
-                    # visualize_confidence_margin(probs_w,epoch,args)
+                    visualize_confidence_margin(probs_w,epoch,args)
             loss_cls = (w * CE(logits_q, pseudo_labels_w)).mean()
         else:
             loss_cls = (CE(logits_q, pseudo_labels_w)).mean()
@@ -661,7 +661,7 @@ def visualize_confidence_margin(probs, epoch, args):
     print(f"Visualization saved to: {save_path}")
 
 
-def confidence_margin_reweighting(probs):
+def confidence_margin_reweighting(probs,args):
     with torch.no_grad():
         # Sort probabilities to get top 2 probabilities for each sample
         top_probs, _ = torch.topk(probs, k=2, dim=1)
@@ -675,7 +675,20 @@ def confidence_margin_reweighting(probs):
         normalized_cm = cm / torch.max(cm) 
 
         # Compute reweighting factors 
-        weights = confidence * margin * torch.exp(normalized_margin)
+        if args.lean.reweighting_type=="m":
+            weights = margin
+        elif args.lean.reweighting_type=="c":
+            weights = confidence
+        elif args.lean.reweighting_type=="cm":
+            weights = cm
+        elif args.lean.reweighting_type=="m_norm":
+            weights = normalized_margin
+        elif args.lean.reweighting_type=="c_norm":
+            weights = normalized_confidence
+        elif args.lean.reweighting_type=="cm_norm":
+            weights = normalized_cm
+        else:
+            None 
     
     return weights
 
