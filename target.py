@@ -675,20 +675,20 @@ def confidence_margin_reweighting(probs,args):
         normalized_cm = cm / torch.max(cm) 
 
         # Compute reweighting factors 
-        if args.lean.reweighting_type=="m":
+        if args.learn.reweighting_type=="m":
             weights = margin
-        elif args.lean.reweighting_type=="c":
+        elif args.learn.reweighting_type=="c":
             weights = confidence
-        elif args.lean.reweighting_type=="cm":
+        elif args.learn.reweighting_type=="cm":
             weights = cm
-        elif args.lean.reweighting_type=="m_norm":
+        elif args.learn.reweighting_type=="m_norm":
             weights = normalized_margin
-        elif args.lean.reweighting_type=="c_norm":
+        elif args.learn.reweighting_type=="c_norm":
             weights = normalized_confidence
-        elif args.lean.reweighting_type=="cm_norm":
+        elif args.learn.reweighting_type=="cm_norm":
             weights = normalized_cm
         else:
-            None 
+            print(f"reweighting_type: {args.learn.reweighting_type} not implimented") 
     
     return weights
 
