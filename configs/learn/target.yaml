@@ -12,8 +12,9 @@ lambda_ins: 1.0
 lambda_div: 1.0
 negative_aug: false
 reweighting: false
-schedule: [250, 500]
+schedule: [500, 1000]
 c: 0.25
+reweighting_type: "m" #[m, c ,mc ,m_norm ,c_norm ,mc_norm]
 
 # algo-related stuff
 aug_versions: "wss" # ["w", "ws", "wss", "ss", "wssn"]
@@ -25,7 +26,7 @@ queue_size: -1
 epoch_labeling: false
 
 # If shuffle_patch_mix
-change_alpha: false
+change_alpha: true
 alpha_spm: 8.0
 alpha_spm_end: 0.0
 beta_spm: 2.0
