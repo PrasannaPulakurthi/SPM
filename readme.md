@@ -55,9 +55,9 @@ bash scripts/train_VISDA-C_target.sh <SRC_MODEL_DIR>
 # example: bash scripts/train_VISDA-C_target.sh "output/VISDA-C/source" 
 ```
 
-This will reproduce Table. 1 from the main paper:
+This will reproduce Table. 3 from the main paper:
 
-![Table 1](media/table_visda.png)
+![Table 3](media/table_visda.png)
 
 For Windows users, the commands can be found in `scripts_win/`.
 
@@ -101,9 +101,9 @@ bash scripts/train_domainnet-126_target.sh <SOURCE_DOMAIN> <TARGET_DOMAIN> <SRC_
 # example: bash scripts/train_domainnet-126_target.sh real sketch "output/domainnet-126/source"
 ```
 
-This will reproduce Table. 2 from the main paper:
+This will reproduce Table. 4 from the main paper:
 
-![Table 2](media/table_domainnet.png)
+![Table 4](media/table_domainnet.png)
 
 For Windows users, the commands can be found in `scripts_win/`.
 
