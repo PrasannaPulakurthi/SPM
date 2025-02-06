@@ -1,6 +1,6 @@
 # Shuffle PatchMix
 
-This is the official implementation of the ICASSP 2025 paper **"Shuffle PatchMix: An Effective Augmentation Technique for Enhanced Source-Free Domain Adaptation"**, authored by [Prasanna Reddy Pulakurthi](https://www.prasannapulakurthi.com/), [Majid Rabbani](https://www.rit.edu/directory/mxreee-majid-rabbani), [Jamison Heard](https://www.rit.edu/directory/jrheee-jamison-heard), [Sohail A. Dianat](https://www.rit.edu/directory/sadeee-sohail-dianat), [Celso M. de Melo](https://celsodemelo.net/), and [Raghuveer Rao](https://ieeexplore.ieee.org/author/37281258600).
+This is the official implementation of the ICIP 2025 paper **"4.	Shuffle PatchMix Augmentation with Confidence Margin Weighted Pseudo-Labels for Enhanced Source-Free Domain Adaptation"**, authored by [Prasanna Reddy Pulakurthi](https://www.prasannapulakurthi.com/), [Majid Rabbani](https://www.rit.edu/directory/mxreee-majid-rabbani), [Jamison Heard](https://www.rit.edu/directory/jrheee-jamison-heard), [Sohail A. Dianat](https://www.rit.edu/directory/sadeee-sohail-dianat), [Celso M. de Melo](https://celsodemelo.net/), and [Raghuveer Rao](https://ieeexplore.ieee.org/author/37281258600).
 
 
 ![Main figure](media/spm.png)
@@ -57,7 +57,7 @@ bash scripts/train_VISDA-C_target.sh <SRC_MODEL_DIR>
 
 This will reproduce Table. 1 from the main paper:
 
-![Table 1](media/table1.png)
+![Table 1](media/table_visda.png)
 
 For Windows users, the commands can be found in `scripts_win/`.
 
@@ -103,7 +103,7 @@ bash scripts/train_domainnet-126_target.sh <SOURCE_DOMAIN> <TARGET_DOMAIN> <SRC_
 
 This will reproduce Table. 2 from the main paper:
 
-![Table 2](media/table2.png)
+![Table 2](media/table_domainnet.png)
 
 For Windows users, the commands can be found in `scripts_win/`.
 
