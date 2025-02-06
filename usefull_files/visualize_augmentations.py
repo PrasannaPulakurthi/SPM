@@ -100,8 +100,8 @@ if __name__ == '__main__':
     set_seed(42)
 
     # Different PatchMix strength
-    # train_transform = get_augmentation_versions_a("spm")
-    # main(train_transform,"strength_spm")
+    train_transform = get_augmentation_versions_a("spm")
+    main(train_transform,"strength_spm")
 
     train_transform = get_augmentation_versions_a("spm_o")
     main(train_transform,"strength_spm_o")

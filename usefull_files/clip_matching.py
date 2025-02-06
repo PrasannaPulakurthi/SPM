@@ -1,15 +1,11 @@
-import os
-import matplotlib.pyplot as plt
+# Download CLIP from https://github.com/openai/CLIP
+
 import torch
 import clip
-from PIL import Image
-from torchvision import transforms
-from torchvision.utils import make_grid
-from torch.utils.data import DataLoader, DistributedSampler
+from torch.utils.data import DataLoader
 from moco.loader import NCropsTransform
 from utils import get_augmentation, AverageMeter
 from image_list import ImageList
-import logging
 from tqdm import tqdm
 
 

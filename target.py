@@ -491,7 +491,7 @@ def train_epoch(train_loader, model, banks, optimizer, epoch, args):
                 w = update_w(step, w, args)
                 if i==0:
                     None
-                    visualize_confidence_margin(probs_w,epoch,args)
+                    # visualize_confidence_margin(probs_w,epoch,args)
             loss_cls = (w * CE(logits_q, pseudo_labels_w)).mean()
         else:
             loss_cls = (CE(logits_q, pseudo_labels_w)).mean()
@@ -665,31 +665,44 @@ def confidence_margin_reweighting(probs,args):
     with torch.no_grad():
         # Sort probabilities to get top 2 probabilities for each sample
         top_probs, _ = torch.topk(probs, k=2, dim=1)
-        confidence = top_probs[:, 0]                # Compute confidence 
-        margin = confidence - top_probs[:, 1]  # Compute margin
-        cm = confidence + margin
+        c = top_probs[:, 0]                     # Compute confidence 
+        m = top_probs[:, 0] - top_probs[:, 1]   # Compute margin
+        cm_p = (c + m)/2
+        cm = c*m
         
         # Normalize to [0, 1] 
-        normalized_margin = margin / torch.max(margin) 
-        normalized_confidence = confidence / torch.max(confidence) 
-        normalized_cm = cm / torch.max(cm) 
+        m_norm = m / torch.max(m) 
+        c_norm = c / torch.max(c) 
+        cm_norm = cm / torch.max(cm) 
+        
+        # Compute reweighting factors based on selected strategy
+        reweighting_type = args.learn.reweighting_type
+        
+        # Define reweighting strategy mapping
+        reweighting_map = {
+            "m": m, "c": c, "cm": cm, "cm_p": cm_p,
+            "m_2": m ** 2, "c_2": c ** 2, "cm_2": cm ** 2, "cm_p_2": cm_p ** 2,
+            "exp_m": torch.exp(m), "exp_c": torch.exp(c), "exp_cm": torch.exp(cm), "exp_cm_p": torch.exp(cm_p),
+            "cm_exp_m":cm * torch.exp(m),	"cm_exp_c":cm * torch.exp(c),	"cm_p_exp_m":cm_p * torch.exp(m),	"cm_p_exp_c":cm_p * torch.exp(c),
+            "m_exp_c":m * torch.exp(c), "c_exp_m":c * torch.exp(m),
+            "cm_m_2": cm * (m ** 2), "cm_m_3": cm * (m ** 3), "cm_c_2": cm * (c ** 2), "cm_c_3": cm * (c ** 3), 
+            "2_c_m_2": 2 * c * (m ** 2), "3_c_m_3": 3 * c * (m ** 3), "2_m_c_2": 2 * m * (c ** 2), "3_m_c_3": 3 * m * (c ** 3), 
+            "2_cm_m_2": 2 * cm * (m ** 2), "3_cm_m_3": 3 * cm * (m ** 3), "2_cm_c_2": 2 * cm * (c ** 2), "3_cm_c_3": 3 * cm * (c ** 3), 
+            "2_cm":2 * cm, "3_m_c_2":3 * m * (c**2)	, "3_c_m_2":3 * c * (m**2)	, "4_c_m_3":4 * c * (m ** 3)	, "4_m_c_3":4 * m * (c ** 3),
+            #
+            "cm_3": cm ** 3, "m_norm": m_norm, "c_norm": c_norm, "cm_norm": cm_norm,
+            "cm_exp_m": cm * torch.exp(m), "cm_exp_m_norm": cm * torch.exp(m_norm),
+            "cm_exp_c": cm * torch.exp(c), "cm_exp_c_norm": cm * torch.exp(c_norm),
+            "m_exp_c": m * torch.exp(c), "c_exp_m": c * torch.exp(m),
+            "m_c2": m * c ** 2, "c_m2": c * m ** 2, "m_c3": m * c ** 3, "c_m3": c * m ** 3,
+            "cm_c2": cm * c ** 2, "cm_m2": cm * m ** 2, "cm_c3": cm * c ** 3, "cm_m3": cm * m ** 3
+        }
+            
+        # Get weights or raise an error if the type is not recognized
+        weights = reweighting_map.get(reweighting_type)
+        if weights is None:
+            raise ValueError(f"Reweighting type '{reweighting_type}' not implemented")
 
-        # Compute reweighting factors 
-        if args.learn.reweighting_type=="m":
-            weights = margin
-        elif args.learn.reweighting_type=="c":
-            weights = confidence
-        elif args.learn.reweighting_type=="cm":
-            weights = cm
-        elif args.learn.reweighting_type=="m_norm":
-            weights = normalized_margin
-        elif args.learn.reweighting_type=="c_norm":
-            weights = normalized_confidence
-        elif args.learn.reweighting_type=="cm_norm":
-            weights = normalized_cm
-        else:
-            print(f"reweighting_type: {args.learn.reweighting_type} not implimented") 
-    
     return weights
 
 

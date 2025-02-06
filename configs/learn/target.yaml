@@ -12,8 +12,8 @@ lambda_ins: 1.0
 lambda_div: 1.0
 negative_aug: false
 reweighting: false
-schedule: [500, 1000]
-reweighting_type: "m" #[m, c ,mc ,m_norm ,c_norm ,mc_norm]
+schedule: [250, 500]
+reweighting_type: "cm_exp_m" #[m, c ,mc , cm_exp_m, 3_m_c_3]
 
 # algo-related stuff
 aug_versions: "wss" # ["w", "ws", "wss", "ss", "wssn"]
