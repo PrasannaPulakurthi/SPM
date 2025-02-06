@@ -1,6 +1,6 @@
 # Shuffle PatchMix
 
-This is the official implementation of the ICIP 2025 paper **"4.	Shuffle PatchMix Augmentation with Confidence Margin Weighted Pseudo-Labels for Enhanced Source-Free Domain Adaptation"**, authored by [Prasanna Reddy Pulakurthi](https://www.prasannapulakurthi.com/), [Majid Rabbani](https://www.rit.edu/directory/mxreee-majid-rabbani), [Jamison Heard](https://www.rit.edu/directory/jrheee-jamison-heard), [Sohail A. Dianat](https://www.rit.edu/directory/sadeee-sohail-dianat), [Celso M. de Melo](https://celsodemelo.net/), and [Raghuveer Rao](https://ieeexplore.ieee.org/author/37281258600).
+This is the official implementation of the ICIP 2025 paper **"Shuffle PatchMix Augmentation with Confidence Margin Weighted Pseudo-Labels for Enhanced Source-Free Domain Adaptation"**, authored by [Prasanna Reddy Pulakurthi](https://www.prasannapulakurthi.com/), [Majid Rabbani](https://www.rit.edu/directory/mxreee-majid-rabbani), [Jamison Heard](https://www.rit.edu/directory/jrheee-jamison-heard), [Sohail A. Dianat](https://www.rit.edu/directory/sadeee-sohail-dianat), [Celso M. de Melo](https://celsodemelo.net/), and [Raghuveer Rao](https://ieeexplore.ieee.org/author/37281258600).
 
 
 ![Main figure](media/spm.png)
