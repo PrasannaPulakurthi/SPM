@@ -10,8 +10,8 @@ This is the official implementation of the ICIP 2025 paper **"Shuffle PatchMix A
 Clone this repository.
 
   ~~~
-  git clone https://github.com/PrasannaPulakurthi/ShufflePatchMix.git
-  cd ShufflePatchMix
+  git clone https://github.com/PrasannaPulakurthi/SPM.git
+  cd SPM
   ~~~
     
 The code is tested with [Pytorch](https://pytorch.org/get-started/locally/) 1.7.1, CUDA 11.0. Please also make sure to install the following packages:
