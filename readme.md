@@ -17,7 +17,7 @@ Clone this repository.
 The code is tested with [Pytorch](https://pytorch.org/get-started/locally/) 1.7.1, CUDA 11.0. Please also make sure to install the following packages:
 
   ~~~
-  pip install hydra-core numpy omegaconf sklearn tqdm wandb
+  pip install hydra-core numpy omegaconf sklearn tqdm wandb seaborn
   ~~~
 
 ## VisDA-C
