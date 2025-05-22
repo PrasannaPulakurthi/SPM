@@ -107,6 +107,11 @@ This will reproduce Table. 4 from the main paper:
 
 For Windows users, the commands can be found in `scripts_win/`.
 
+## PACS
+
+### **Prepare dataset**
+Download PACS from [kaggel](https://www.kaggle.com/datasets/nickfratto/pacs-dataset/data?select=pacs_data).
+
 ## Reference
 
 If you find this work helpful to your work, please consider citing us:
