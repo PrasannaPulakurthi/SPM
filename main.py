@@ -16,7 +16,7 @@ import torch.multiprocessing as mp
 import wandb
 
 from source import train_source_domain
-from target import train_target_domain as train_target_adacontrast
+from target import train_target_domain
 from utils import configure_logger, NUM_CLASSES, use_wandb
 
 
@@ -138,7 +138,7 @@ def main_worker(gpu, ngpus_per_node, args):
                     )
                 # main loop
                 if args.target_algorithm == "ours":
-                    train_target_adacontrast(args)
+                    train_target_domain(args)
                 if use_wandb(args):
                     wandb.finish()
 
