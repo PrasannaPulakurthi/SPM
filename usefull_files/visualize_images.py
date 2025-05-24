@@ -49,9 +49,9 @@ def save_montage(images_w, images_q, images_k, filename='montage.png'):
 # Assuming this function exists and is correctly implemented
 def get_augmentation_versions():
     transform_list = [
-        get_augmentation("spm"),
-        get_augmentation("shuffle_patch_mix"),
-        get_augmentation("jigsaw"),  
+        get_augmentation("shuffle_patch_mix_all",1,16),
+        get_augmentation("shuffle_patch_mix_o_all",1,16),
+        get_augmentation("jigsaw_all"),  
     ]
     return NCropsTransform(transform_list)
 

@@ -2,17 +2,6 @@ import torch
 import numpy as np
 from PIL import Image
 
-def peano_curve_indices(num_patches_h, num_patches_w):
-    # Simple Peano curve-like ordering
-    indices = []
-    for i in range(num_patches_h):
-        for j in range(num_patches_w):
-            if i % 2 == 0:
-                indices.append((i, j))
-            else:
-                indices.append((i, num_patches_w - 1 - j))
-    return np.array(indices).reshape(-1, 2)
-
 def create_feather_mask(height, width, feather_size=4):
     """
     Create a 2D mask of shape (height x width) that smoothly transitions
@@ -123,10 +112,7 @@ class ShufflePatchMix():
 
 class ShufflePatchMix_all():
     def __init__(self, patch_height, patch_width, mix_prob=0.8, alpha=4.0, beta=2.0):
-        patch_height_options = [14, 28, 56, 112]
-        random_number = np.random.randint(1, len(patch_height_options))
-        self.patch_height = patch_height_options[random_number]
-        self.patch_width = patch_height_options[random_number] 
+        self.patch_height_options = [14, 28, 56, 112]
         self.alpha = alpha
         self.mix_prob = mix_prob
         self.beta = beta
@@ -135,6 +121,10 @@ class ShufflePatchMix_all():
         if  torch.rand(1) > self.mix_prob:
             return img
     
+        random_number = np.random.randint(1, len(self.patch_height_options))
+        self.patch_height = self.patch_height_options[random_number]
+        self.patch_width = self.patch_height_options[random_number] 
+
         img_np = np.array(img)
         h, w, c = img_np.shape
         num_patches_h = h // self.patch_height
@@ -177,6 +167,349 @@ class ShufflePatchMix_all():
         # Convert back to PIL Image
         mixed_img = np.clip(mixed_img, 0, 255).astype(np.uint8)
         return Image.fromarray(mixed_img)
+
+class ShufflePatchMixOverlap():
+    def __init__(self, 
+                 patch_height, 
+                 patch_width, 
+                 mix_prob=0.8, 
+                 alpha=4.0, 
+                 beta=2.0, 
+                 overlap=4):
+        """
+        patch_height, patch_width : Base size of each patch (without overlap).
+        overlap                  : Overlap in pixels on each edge.
+        mix_prob                 : Probability of applying ShufflePatchMix.
+        alpha, beta              : Beta distribution parameters (lambda sampling).
+        """
+        self.patch_height = patch_height
+        self.patch_width = patch_width
+        self.alpha = alpha
+        self.mix_prob = mix_prob
+        self.beta = beta
+        self.overlap = int(self.patch_height/7)
+
+    def __call__(self, img):
+        # 1) Randomly skip
+        if torch.rand(1) > self.mix_prob:
+            return img
+
+        # 2) Convert to NumPy float32
+        img_np = np.array(img, dtype=np.float32)
+        h, w, c = img_np.shape
+
+        # 3) Compute # of patches in each dimension
+        num_patches_h = h // self.patch_height
+        num_patches_w = w // self.patch_width
+
+        # 4) Precompute a large feather mask for the largest possible patch 
+        #    (patch_height + 2*overlap x patch_width + 2*overlap)
+        #    We'll slice it down for boundary patches if needed
+        feather_mask_full = create_feather_mask(
+            self.patch_height + 2*self.overlap,
+            self.patch_width  + 2*self.overlap,
+            feather_size=self.overlap
+        )
+
+        # 5) Extract patches
+        patches = []
+        coords = []
+        for i_patch in range(num_patches_h):
+            for j_patch in range(num_patches_w):
+                start_h, end_h, start_w, end_w = edgelogic(
+                    i_patch, j_patch,
+                    self.patch_height, self.patch_width,
+                    num_patches_h, num_patches_w,
+                    self.overlap
+                )
+                # Clip to image boundaries if needed
+                start_h = max(0, start_h)
+                start_w = max(0, start_w)
+                end_h   = min(h, end_h)
+                end_w   = min(w, end_w)
+
+                patch = img_np[start_h:end_h, start_w:end_w]
+                patches.append(patch)
+                coords.append((start_h, end_h, start_w, end_w))
+
+        # 6) Shuffle & mix patches
+        N = len(patches)
+        indices = np.random.permutation(N)
+        mixed_patches = []
+        for i_patch in range(N):
+            lam = np.random.beta(self.alpha, self.beta)
+            patchA = patches[i_patch]
+            patchB = patches[indices[i_patch]]
+            mixed_patch = lam * patchA + (1 - lam) * patchB
+            mixed_patches.append(mixed_patch)
+
+        # 7) Prepare output & weight arrays for soft blending
+        output = np.zeros_like(img_np, dtype=np.float32)
+        weight = np.zeros((h, w), dtype=np.float32)
+
+        # 8) Blend each patch with the feather mask
+        for i_patch, (sh, eh, sw, ew) in enumerate(coords):
+            patch_mixed = mixed_patches[i_patch]
+            ph, pw, _ = patch_mixed.shape
+
+            # Extract the corresponding portion of the big feather mask
+            # if patch is smaller near boundaries, slice the mask
+            mask_2d = feather_mask_full[:ph, :pw]
+            
+            # Convert mask to 3 channels if needed
+            if c == 1:
+                mask_3d = mask_2d[..., None]
+            else:
+                mask_3d = np.repeat(mask_2d[..., None], c, axis=2)
+
+            # Feathered patch
+            patch_feathered = patch_mixed * mask_3d
+
+            # Accumulate in output
+            output[sh:eh, sw:ew] += patch_feathered
+            weight[sh:eh, sw:ew] += mask_2d
+
+        # 9) Final divide by weight -> smooth blend
+        weight = np.clip(weight, 1e-8, None)
+        output /= weight[..., None]
+
+        final_output = img_np
+        final_output[1:-1,1:-1] = output[1:-1,1:-1]
+        # 10) Convert back to uint8
+        final_output = np.clip(final_output, 0, 255).astype(np.uint8)
+        return Image.fromarray(final_output)
+
+class ShufflePatchMixOverlap_all():
+    def __init__(self, 
+                 patch_height, 
+                 patch_width, 
+                 mix_prob=0.8, 
+                 alpha=4.0, 
+                 beta=2.0):
+        """
+        patch_height, patch_width : Base size of each patch (without overlap).
+        overlap                  : Overlap in pixels on each edge.
+        mix_prob                 : Probability of applying ShufflePatchMix.
+        alpha, beta              : Beta distribution parameters (lambda sampling).
+        """
+        self.patch_height_options = [14, 28, 56, 112]
+        self.alpha = alpha
+        self.mix_prob = mix_prob
+        self.beta = beta
+
+    def __call__(self, img):
+        # 1) Randomly skip
+        if torch.rand(1) > self.mix_prob:
+            return img
+
+        random_number = np.random.randint(1, len(self.patch_height_options))
+        self.patch_height = self.patch_height_options[random_number]
+        self.patch_width = self.patch_height_options[random_number] 
+        self.overlap = int(self.patch_height/7)
+
+        # 2) Convert to NumPy float32
+        img_np = np.array(img, dtype=np.float32)
+        h, w, c = img_np.shape
+
+        # 3) Compute # of patches in each dimension
+        num_patches_h = h // self.patch_height
+        num_patches_w = w // self.patch_width
+
+        # 4) Precompute a large feather mask for the largest possible patch 
+        #    (patch_height + 2*overlap x patch_width + 2*overlap)
+        #    We'll slice it down for boundary patches if needed
+        feather_mask_full = create_feather_mask(
+            self.patch_height + 2*self.overlap,
+            self.patch_width  + 2*self.overlap,
+            feather_size=self.overlap
+        )
+
+        # 5) Extract patches
+        patches = []
+        coords = []
+        for i_patch in range(num_patches_h):
+            for j_patch in range(num_patches_w):
+                start_h, end_h, start_w, end_w = edgelogic(
+                    i_patch, j_patch,
+                    self.patch_height, self.patch_width,
+                    num_patches_h, num_patches_w,
+                    self.overlap
+                )
+                # Clip to image boundaries if needed
+                start_h = max(0, start_h)
+                start_w = max(0, start_w)
+                end_h   = min(h, end_h)
+                end_w   = min(w, end_w)
+
+                patch = img_np[start_h:end_h, start_w:end_w]
+                patches.append(patch)
+                coords.append((start_h, end_h, start_w, end_w))
+
+        # 6) Shuffle & mix patches
+        N = len(patches)
+        indices = np.random.permutation(N)
+        mixed_patches = []
+        for i_patch in range(N):
+            lam = np.random.beta(self.alpha, self.beta)
+            patchA = patches[i_patch]
+            patchB = patches[indices[i_patch]]
+            mixed_patch = lam * patchA + (1 - lam) * patchB
+            mixed_patches.append(mixed_patch)
+
+        # 7) Prepare output & weight arrays for soft blending
+        output = np.zeros_like(img_np, dtype=np.float32)
+        weight = np.zeros((h, w), dtype=np.float32)
+
+        # 8) Blend each patch with the feather mask
+        for i_patch, (sh, eh, sw, ew) in enumerate(coords):
+            patch_mixed = mixed_patches[i_patch]
+            ph, pw, _ = patch_mixed.shape
+
+            # Extract the corresponding portion of the big feather mask
+            # if patch is smaller near boundaries, slice the mask
+            mask_2d = feather_mask_full[:ph, :pw]
+            
+            # Convert mask to 3 channels if needed
+            if c == 1:
+                mask_3d = mask_2d[..., None]
+            else:
+                mask_3d = np.repeat(mask_2d[..., None], c, axis=2)
+
+            # Feathered patch
+            patch_feathered = patch_mixed * mask_3d
+
+            # Accumulate in output
+            output[sh:eh, sw:ew] += patch_feathered
+            weight[sh:eh, sw:ew] += mask_2d
+
+        # 9) Final divide by weight -> smooth blend
+        weight = np.clip(weight, 1e-8, None)
+        output /= weight[..., None]
+
+        final_output = img_np
+        final_output[1:-1,1:-1] = output[1:-1,1:-1]
+        # 10) Convert back to uint8
+        final_output = np.clip(final_output, 0, 255).astype(np.uint8)
+        return Image.fromarray(final_output)
+
+class JigsawPuzzle():
+    def __init__(self, patch_height, patch_width):
+        self.patch_height = patch_height
+        self.patch_width = patch_width
+        self.mix_prob = 1
+
+    def __call__(self, img):
+        if  torch.rand(1) > self.mix_prob:
+            return img
+        img_np = np.array(img)
+        h, w, c = img_np.shape
+        num_patches_h = h // self.patch_height
+        num_patches_w = w // self.patch_width
+        N = num_patches_h * num_patches_w
+
+        # Create a list of patches
+        patches = []
+        for i in range(num_patches_h):
+            for j in range(num_patches_w):
+                start_h = i * self.patch_height
+                start_w = j * self.patch_width
+                patch = img_np[start_h:start_h+self.patch_height, start_w:start_w+self.patch_width]
+                patches.append(patch)
+
+        # Generate a random permutation of the indices
+        indices = np.random.permutation(N)
+
+        # Initialize the mixed patches list
+        mixed_patches = []
+
+        # Apply PatchMix transformation
+        for i in range(N):
+            shuffled_index = indices[i]
+            mixed_patch = patches[shuffled_index]
+            mixed_patches.append(mixed_patch)
+
+        # Reconstruct the mixed image from mixed patches
+        mixed_img = np.zeros_like(img_np)
+        index = 0
+        for i in range(num_patches_h):
+            for j in range(num_patches_w):
+                start_h = i * self.patch_height
+                start_w = j * self.patch_width
+                mixed_img[start_h:start_h+self.patch_height, start_w:start_w+self.patch_width] = mixed_patches[index]
+                index += 1
+
+        # Convert back to PIL Image
+        mixed_img = np.clip(mixed_img, 0, 255).astype(np.uint8)
+        
+        return Image.fromarray(mixed_img)
+    
+class JigsawPuzzle_all():
+    def __init__(self, patch_height, patch_width):
+        self.patch_height_options = [14, 28, 56, 112]
+        self.mix_prob = 1
+
+    def __call__(self, img):
+        if  torch.rand(1) > self.mix_prob:
+            return img
+        
+        random_number = np.random.randint(1, len(self.patch_height_options))
+        self.patch_height = self.patch_height_options[random_number]
+        self.patch_width = self.patch_height_options[random_number] 
+
+        img_np = np.array(img)
+        h, w, c = img_np.shape
+        num_patches_h = h // self.patch_height
+        num_patches_w = w // self.patch_width
+        N = num_patches_h * num_patches_w
+
+        # Create a list of patches
+        patches = []
+        for i in range(num_patches_h):
+            for j in range(num_patches_w):
+                start_h = i * self.patch_height
+                start_w = j * self.patch_width
+                patch = img_np[start_h:start_h+self.patch_height, start_w:start_w+self.patch_width]
+                patches.append(patch)
+
+        # Generate a random permutation of the indices
+        indices = np.random.permutation(N)
+
+        # Initialize the mixed patches list
+        mixed_patches = []
+
+        # Apply PatchMix transformation
+        for i in range(N):
+            shuffled_index = indices[i]
+            mixed_patch = patches[shuffled_index]
+            mixed_patches.append(mixed_patch)
+
+        # Reconstruct the mixed image from mixed patches
+        mixed_img = np.zeros_like(img_np)
+        index = 0
+        for i in range(num_patches_h):
+            for j in range(num_patches_w):
+                start_h = i * self.patch_height
+                start_w = j * self.patch_width
+                mixed_img[start_h:start_h+self.patch_height, start_w:start_w+self.patch_width] = mixed_patches[index]
+                index += 1
+
+        # Convert back to PIL Image
+        mixed_img = np.clip(mixed_img, 0, 255).astype(np.uint8)
+        
+        return Image.fromarray(mixed_img)
+
+'''
+
+def peano_curve_indices(num_patches_h, num_patches_w):
+    # Simple Peano curve-like ordering
+    indices = []
+    for i in range(num_patches_h):
+        for j in range(num_patches_w):
+            if i % 2 == 0:
+                indices.append((i, j))
+            else:
+                indices.append((i, num_patches_w - 1 - j))
+    return np.array(indices).reshape(-1, 2)
 
 class ShufflePatchMix_l():
     def __init__(self, patch_height, patch_width, mix_prob=0.8, alpha=4.0, beta=2.0):
@@ -295,229 +628,6 @@ class ShufflePatchMix_l_all():
         # Convert back to PIL Image
         mixed_img = np.clip(mixed_img, 0, 255).astype(np.uint8)
         return Image.fromarray(mixed_img)
-
-class ShufflePatchMixOverlap():
-    def __init__(self, 
-                 patch_height, 
-                 patch_width, 
-                 mix_prob=0.8, 
-                 alpha=4.0, 
-                 beta=2.0, 
-                 overlap=4):
-        """
-        patch_height, patch_width : Base size of each patch (without overlap).
-        overlap                  : Overlap in pixels on each edge.
-        mix_prob                 : Probability of applying ShufflePatchMix.
-        alpha, beta              : Beta distribution parameters (lambda sampling).
-        """
-        self.patch_height = patch_height
-        self.patch_width = patch_width
-        self.alpha = alpha
-        self.mix_prob = mix_prob
-        self.beta = beta
-        self.overlap = int(self.patch_height/7)
-
-    def __call__(self, img):
-        # 1) Randomly skip
-        if torch.rand(1) > self.mix_prob:
-            return img
-
-        # 2) Convert to NumPy float32
-        img_np = np.array(img, dtype=np.float32)
-        h, w, c = img_np.shape
-
-        # 3) Compute # of patches in each dimension
-        num_patches_h = h // self.patch_height
-        num_patches_w = w // self.patch_width
-
-        # 4) Precompute a large feather mask for the largest possible patch 
-        #    (patch_height + 2*overlap x patch_width + 2*overlap)
-        #    We'll slice it down for boundary patches if needed
-        feather_mask_full = create_feather_mask(
-            self.patch_height + 2*self.overlap,
-            self.patch_width  + 2*self.overlap,
-            feather_size=4
-        )
-
-        # 5) Extract patches
-        patches = []
-        coords = []
-        for i_patch in range(num_patches_h):
-            for j_patch in range(num_patches_w):
-                start_h, end_h, start_w, end_w = edgelogic(
-                    i_patch, j_patch,
-                    self.patch_height, self.patch_width,
-                    num_patches_h, num_patches_w,
-                    self.overlap
-                )
-                # Clip to image boundaries if needed
-                start_h = max(0, start_h)
-                start_w = max(0, start_w)
-                end_h   = min(h, end_h)
-                end_w   = min(w, end_w)
-
-                patch = img_np[start_h:end_h, start_w:end_w]
-                patches.append(patch)
-                coords.append((start_h, end_h, start_w, end_w))
-
-        # 6) Shuffle & mix patches
-        N = len(patches)
-        indices = np.random.permutation(N)
-        mixed_patches = []
-        for i_patch in range(N):
-            lam = np.random.beta(self.alpha, self.beta)
-            patchA = patches[i_patch]
-            patchB = patches[indices[i_patch]]
-            mixed_patch = lam * patchA + (1 - lam) * patchB
-            mixed_patches.append(mixed_patch)
-
-        # 7) Prepare output & weight arrays for soft blending
-        output = np.zeros_like(img_np, dtype=np.float32)
-        weight = np.zeros((h, w), dtype=np.float32)
-
-        # 8) Blend each patch with the feather mask
-        for i_patch, (sh, eh, sw, ew) in enumerate(coords):
-            patch_mixed = mixed_patches[i_patch]
-            ph, pw, _ = patch_mixed.shape
-
-            # Extract the corresponding portion of the big feather mask
-            # if patch is smaller near boundaries, slice the mask
-            mask_2d = feather_mask_full[:ph, :pw]
-            
-            # Convert mask to 3 channels if needed
-            if c == 1:
-                mask_3d = mask_2d[..., None]
-            else:
-                mask_3d = np.repeat(mask_2d[..., None], c, axis=2)
-
-            # Feathered patch
-            patch_feathered = patch_mixed * mask_3d
-
-            # Accumulate in output
-            output[sh:eh, sw:ew] += patch_feathered
-            weight[sh:eh, sw:ew] += mask_2d
-
-        # 9) Final divide by weight -> smooth blend
-        weight = np.clip(weight, 1e-8, None)
-        output /= weight[..., None]
-
-        final_output = img_np
-        final_output[1:-1,1:-1] = output[1:-1,1:-1]
-        # 10) Convert back to uint8
-        final_output = np.clip(final_output, 0, 255).astype(np.uint8)
-        return Image.fromarray(final_output)
-
-class ShufflePatchMixOverlap_all():
-    def __init__(self, 
-                 patch_height, 
-                 patch_width, 
-                 mix_prob=0.8, 
-                 alpha=4.0, 
-                 beta=2.0):
-        """
-        patch_height, patch_width : Base size of each patch (without overlap).
-        overlap                  : Overlap in pixels on each edge.
-        mix_prob                 : Probability of applying ShufflePatchMix.
-        alpha, beta              : Beta distribution parameters (lambda sampling).
-        """
-        patch_height_options = [14, 28, 56, 112]
-        random_number = np.random.randint(1, len(patch_height_options))
-        self.patch_height = patch_height_options[random_number]
-        self.patch_width = patch_height_options[random_number] 
-        self.alpha = alpha
-        self.mix_prob = mix_prob
-        self.beta = beta
-        self.overlap = int(self.patch_height/7)
-
-    def __call__(self, img):
-        # 1) Randomly skip
-        if torch.rand(1) > self.mix_prob:
-            return img
-
-        # 2) Convert to NumPy float32
-        img_np = np.array(img, dtype=np.float32)
-        h, w, c = img_np.shape
-
-        # 3) Compute # of patches in each dimension
-        num_patches_h = h // self.patch_height
-        num_patches_w = w // self.patch_width
-
-        # 4) Precompute a large feather mask for the largest possible patch 
-        #    (patch_height + 2*overlap x patch_width + 2*overlap)
-        #    We'll slice it down for boundary patches if needed
-        feather_mask_full = create_feather_mask(
-            self.patch_height + 2*self.overlap,
-            self.patch_width  + 2*self.overlap,
-            feather_size=4
-        )
-
-        # 5) Extract patches
-        patches = []
-        coords = []
-        for i_patch in range(num_patches_h):
-            for j_patch in range(num_patches_w):
-                start_h, end_h, start_w, end_w = edgelogic(
-                    i_patch, j_patch,
-                    self.patch_height, self.patch_width,
-                    num_patches_h, num_patches_w,
-                    self.overlap
-                )
-                # Clip to image boundaries if needed
-                start_h = max(0, start_h)
-                start_w = max(0, start_w)
-                end_h   = min(h, end_h)
-                end_w   = min(w, end_w)
-
-                patch = img_np[start_h:end_h, start_w:end_w]
-                patches.append(patch)
-                coords.append((start_h, end_h, start_w, end_w))
-
-        # 6) Shuffle & mix patches
-        N = len(patches)
-        indices = np.random.permutation(N)
-        mixed_patches = []
-        for i_patch in range(N):
-            lam = np.random.beta(self.alpha, self.beta)
-            patchA = patches[i_patch]
-            patchB = patches[indices[i_patch]]
-            mixed_patch = lam * patchA + (1 - lam) * patchB
-            mixed_patches.append(mixed_patch)
-
-        # 7) Prepare output & weight arrays for soft blending
-        output = np.zeros_like(img_np, dtype=np.float32)
-        weight = np.zeros((h, w), dtype=np.float32)
-
-        # 8) Blend each patch with the feather mask
-        for i_patch, (sh, eh, sw, ew) in enumerate(coords):
-            patch_mixed = mixed_patches[i_patch]
-            ph, pw, _ = patch_mixed.shape
-
-            # Extract the corresponding portion of the big feather mask
-            # if patch is smaller near boundaries, slice the mask
-            mask_2d = feather_mask_full[:ph, :pw]
-            
-            # Convert mask to 3 channels if needed
-            if c == 1:
-                mask_3d = mask_2d[..., None]
-            else:
-                mask_3d = np.repeat(mask_2d[..., None], c, axis=2)
-
-            # Feathered patch
-            patch_feathered = patch_mixed * mask_3d
-
-            # Accumulate in output
-            output[sh:eh, sw:ew] += patch_feathered
-            weight[sh:eh, sw:ew] += mask_2d
-
-        # 9) Final divide by weight -> smooth blend
-        weight = np.clip(weight, 1e-8, None)
-        output /= weight[..., None]
-
-        final_output = img_np
-        final_output[1:-1,1:-1] = output[1:-1,1:-1]
-        # 10) Convert back to uint8
-        final_output = np.clip(final_output, 0, 255).astype(np.uint8)
-        return Image.fromarray(final_output)
 
 class ShufflePatchMixOverlap_l():
     def __init__(self, 
@@ -785,110 +895,6 @@ class ShufflePatchMixOverlap_l_all():
         final_output = np.clip(final_output, 0, 255).astype(np.uint8)
         return Image.fromarray(final_output)
     
-class JigsawPuzzle():
-    def __init__(self, patch_height, patch_width):
-        self.patch_height = patch_height
-        self.patch_width = patch_width
-        self.mix_prob = 1
-
-    def __call__(self, img):
-        if  torch.rand(1) <= self.mix_prob:
-            return img
-        img_np = np.array(img)
-        h, w, c = img_np.shape
-        num_patches_h = h // self.patch_height
-        num_patches_w = w // self.patch_width
-        N = num_patches_h * num_patches_w
-
-        # Create a list of patches
-        patches = []
-        for i in range(num_patches_h):
-            for j in range(num_patches_w):
-                start_h = i * self.patch_height
-                start_w = j * self.patch_width
-                patch = img_np[start_h:start_h+self.patch_height, start_w:start_w+self.patch_width]
-                patches.append(patch)
-
-        # Generate a random permutation of the indices
-        indices = np.random.permutation(N)
-
-        # Initialize the mixed patches list
-        mixed_patches = []
-
-        # Apply PatchMix transformation
-        for i in range(N):
-            shuffled_index = indices[i]
-            mixed_patch = patches[shuffled_index]
-            mixed_patches.append(mixed_patch)
-
-        # Reconstruct the mixed image from mixed patches
-        mixed_img = np.zeros_like(img_np)
-        index = 0
-        for i in range(num_patches_h):
-            for j in range(num_patches_w):
-                start_h = i * self.patch_height
-                start_w = j * self.patch_width
-                mixed_img[start_h:start_h+self.patch_height, start_w:start_w+self.patch_width] = mixed_patches[index]
-                index += 1
-
-        # Convert back to PIL Image
-        mixed_img = np.clip(mixed_img, 0, 255).astype(np.uint8)
-        
-        return Image.fromarray(mixed_img)
-    
-class JigsawPuzzle_all():
-    def __init__(self, patch_height, patch_width):
-        patch_height_options = [14, 28, 56, 112]
-        random_number = np.random.randint(1, len(patch_height_options))
-        self.patch_height = patch_height_options[random_number]
-        self.patch_width = patch_height_options[random_number] 
-        self.mix_prob = 1
-
-    def __call__(self, img):
-        if  torch.rand(1) <= self.mix_prob:
-            return img
-        img_np = np.array(img)
-        h, w, c = img_np.shape
-        num_patches_h = h // self.patch_height
-        num_patches_w = w // self.patch_width
-        N = num_patches_h * num_patches_w
-
-        # Create a list of patches
-        patches = []
-        for i in range(num_patches_h):
-            for j in range(num_patches_w):
-                start_h = i * self.patch_height
-                start_w = j * self.patch_width
-                patch = img_np[start_h:start_h+self.patch_height, start_w:start_w+self.patch_width]
-                patches.append(patch)
-
-        # Generate a random permutation of the indices
-        indices = np.random.permutation(N)
-
-        # Initialize the mixed patches list
-        mixed_patches = []
-
-        # Apply PatchMix transformation
-        for i in range(N):
-            shuffled_index = indices[i]
-            mixed_patch = patches[shuffled_index]
-            mixed_patches.append(mixed_patch)
-
-        # Reconstruct the mixed image from mixed patches
-        mixed_img = np.zeros_like(img_np)
-        index = 0
-        for i in range(num_patches_h):
-            for j in range(num_patches_w):
-                start_h = i * self.patch_height
-                start_w = j * self.patch_width
-                mixed_img[start_h:start_h+self.patch_height, start_w:start_w+self.patch_width] = mixed_patches[index]
-                index += 1
-
-        # Convert back to PIL Image
-        mixed_img = np.clip(mixed_img, 0, 255).astype(np.uint8)
-        
-        return Image.fromarray(mixed_img)
-
 class JigsawPuzzle_l():
     def __init__(self, patch_height, patch_width):
         self.patch_height = patch_height
@@ -944,3 +950,4 @@ class JigsawPuzzle_l():
         else:
             return img
 
+'''
