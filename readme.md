@@ -1,6 +1,16 @@
-# Shuffle PatchMix
+# <p align="center">Shuffle PatchMix</p>
 
-This is the official implementation of the ICIP 2025 paper **"Shuffle PatchMix Augmentation with Confidence Margin Weighted Pseudo-Labels for Enhanced Source-Free Domain Adaptation"**, authored by [Prasanna Reddy Pulakurthi](https://www.prasannapulakurthi.com/), [Majid Rabbani](https://www.rit.edu/directory/mxreee-majid-rabbani), [Jamison Heard](https://www.rit.edu/directory/jrheee-jamison-heard), [Sohail A. Dianat](https://www.rit.edu/directory/sadeee-sohail-dianat), [Celso M. de Melo](https://celsodemelo.net/), and [Raghuveer Rao](https://ieeexplore.ieee.org/author/37281258600).
+<p align="center">
+  <a href="https://arxiv.org/abs/2504.13077"><img src="https://img.shields.io/badge/arXiv-2504.13077-b31b1b.svg" alt="arXiv"></a>
+  <a href="https://paperswithcode.com/paper/effective-dual-region-augmentation-for"><img src="https://img.shields.io/badge/Papers%20with%20Code-Dual--Region%20Augmentation-blue" alt="Papers with Code"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://visitor-badge.laobi.icu/badge?page_id=PrasannaPulakurthi/SPM">
+    <img src="https://visitor-badge.laobi.icu/badge?page_id=PrasannaPulakurthi/SPM" alt="visitors">
+  </a>
+</p>
+
+
+This is the official implementation of the ICIP 2025 paper **"Shuffle PatchMix Augmentation with Confidence Margin Weighted Pseudo-Labels for Enhanced Source-Free Domain Adaptation"**, by [Prasanna Reddy Pulakurthi](https://www.prasannapulakurthi.com/), [Majid Rabbani](https://www.rit.edu/directory/mxreee-majid-rabbani), [Jamison Heard](https://www.rit.edu/directory/jrheee-jamison-heard), [Sohail A. Dianat](https://www.rit.edu/directory/sadeee-sohail-dianat), [Celso M. de Melo](https://celsodemelo.net/), and [Raghuveer Rao](https://ieeexplore.ieee.org/author/37281258600).
 
 
 ![Main figure](media/spm.png)
