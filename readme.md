@@ -31,7 +31,7 @@ The code is tested with [Pytorch](https://pytorch.org/get-started/locally/) 1.7.
 ## PACS
 
 ### **Prepare dataset**
-Download PACS from [kaggel](https://www.kaggle.com/datasets/nickfratto/pacs-dataset/data?select=pacs_data).
+Download PACS from [Kaggel](https://www.kaggle.com/datasets/nickfratto/pacs-dataset/data?select=pacs_data) or the [Official Website](https://domaingeneralization.github.io/).
 
 ```bash
 ${DATA_ROOT}
@@ -48,7 +48,7 @@ ${DATA_ROOT}
 │   ├── pcs_list.txt
 ```
 
-`${DATA_ROOT}` is set to `./datasets/` by default, which can be modified in `configs/data/basic.yaml` or via hydra command line interface `data.data_root=${DATA_ROOT}`.
+`${DATA_ROOT}` is set to `./datasets/` by default, which can be modified in `configs/data/basic.yaml` or via the hydra command line interface `data.data_root=${DATA_ROOT}`.
 
 ### **Training**
 The [hydra](https://github.com/facebookresearch/hydra) is used as the configuration system. By default, the working directory is `./output`, which can be changed directly from `configs/root.yaml` or via the hydra command line interface `workdir=${WORK_DIR}`.
