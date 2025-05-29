@@ -64,7 +64,7 @@ bash scripts/train_VISDA-C_target.sh <SRC_MODEL_DIR>
 
 This will reproduce Table 1 and 2 from the main paper:
 
-![Table 1 2](media/Table_1_2.pdf)
+![Table 1 2](media/tables_1_2.pdf)
 
 For Windows users, the commands can be found in `scripts_win/`.
 
