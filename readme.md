@@ -31,7 +31,7 @@ The code is tested with [Pytorch](https://pytorch.org/get-started/locally/) 1.7.
 ## PACS
 
 ### **Prepare dataset**
-Download PACS from [Kaggel](https://www.kaggle.com/datasets/nickfratto/pacs-dataset/data?select=pacs_data) or the [Official Website](https://domaingeneralization.github.io/).
+Download PACS from [Kaggel](https://www.kaggle.com/datasets/nickfratto/pacs-dataset/data?select=pacs_data) or the [Official Website](https://domaingeneralization.github.io/), and put it under `${DATA_ROOT}`. For your convenience, the `.txt` files based on the image labels are provided under `./datasets/PACS/`. The prepared directory would look like this:
 
 ```bash
 ${DATA_ROOT}
