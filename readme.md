@@ -53,19 +53,19 @@ ${DATA_ROOT}
 ### **Training**
 The [hydra](https://github.com/facebookresearch/hydra) is used as the configuration system. By default, the working directory is `./output`, which can be changed directly from `configs/root.yaml` or via the hydra command line interface `workdir=${WORK_DIR}`.
 
-VISDA-C experiments are done for `train` to `validation` adaptation. Before the adaptation, we should have the source model. You may train the source model with the script `scripts/train_VISDA-C_source.sh` as shown below. The pre-trained source models for seed 2022 can be [downloaded from here](https://drive.google.com/drive/folders/1i_orPbG753tJ220oLLKi4hAgSudBCLOC?usp=sharing).
+VISDA-C experiments are done for `train` to `validation` adaptation. Before the adaptation, we should have the source model. You may train the source model with the script `scripts/train_PACS_source.sh` as shown below. The pre-trained source models for seed 2022 can be [downloaded from here](https://drive.google.com/drive/folders/1i_orPbG753tJ220oLLKi4hAgSudBCLOC?usp=sharing).
 
-After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_VISDA-C_target.sh` to execute the adaptation.
+After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_PACS_target.sh` to execute the adaptation.
 
 ```bash
-export CUDA_VISIBLE_DEVICES=0,1,2,3
+export CUDA_VISIBLE_DEVICES=0,1
 
 # train source model
-bash scripts/train_VISDA-C_source.sh
+bash scripts/train_PACS_source.sh
 
 # train SPM SFDA
-bash scripts/train_VISDA-C_target.sh <SRC_MODEL_DIR>
-# example: bash scripts/train_VISDA-C_target.sh "output/VISDA-C/source" 
+bash scripts/train_PACS_target.sh <SRC_MODEL_DIR>
+# example: bash scripts/train_PACS_target.sh "output/PACS/source" 
 ```
 
 This will reproduce Tables 1 and 2 from the main paper:
