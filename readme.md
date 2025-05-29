@@ -62,9 +62,11 @@ bash scripts/train_VISDA-C_target.sh <SRC_MODEL_DIR>
 # example: bash scripts/train_VISDA-C_target.sh "output/VISDA-C/source" 
 ```
 
-This will reproduce Table 1 and 2 from the main paper:
+This will reproduce Tables 1 and 2 from the main paper:
 
-![Table 1 2](media/tables_1_2.png)
+<p align="center">
+  <img src="media/tables_1_2.png" alt="Tables 1 & 2" width="700"/>
+</p>
 
 For Windows users, the commands can be found in `scripts_win/`.
 
@@ -101,9 +103,11 @@ bash scripts/train_VISDA-C_target.sh <SRC_MODEL_DIR>
 # example: bash scripts/train_VISDA-C_target.sh "output/VISDA-C/source" 
 ```
 
-This will reproduce Table. 3 from the main paper:
+This will reproduce the Table. 3 from the main paper:
 
-![Table 3](media/table_3.png)
+<p align="center">
+  <img src="media/tables_3.png" alt="Tables 3" width="700"/>
+</p>
 
 For Windows users, the commands can be found in `scripts_win/`.
 
@@ -111,7 +115,7 @@ For Windows users, the commands can be found in `scripts_win/`.
 
 ### **Prepare dataset**
 
-Please download the [DomainNet dataset (cleaned version)](http://ai.bu.edu/M3SDA/), and put it under `${DATA_ROOT}`. Notice that we follow [MME](https://arxiv.org/abs/1904.06487) to use a subset that contains 126 classes from 4 domains. The `.txt` files on the image labels, are provided under `./datasets/domainnet-126/`. The prepared directory would look like this:
+Please download the [DomainNet dataset (cleaned version)](http://ai.bu.edu/M3SDA/), and put it under `${DATA_ROOT}`. Notice that we follow [MME](https://arxiv.org/abs/1904.06487) to use a subset that contains 126 classes from 4 domains. The `.txt` files on the image labels are provided under `./datasets/domainnet-126/`. The prepared directory would look like this:
 
 ```bash
 ${DATA_ROOT}
@@ -128,7 +132,7 @@ ${DATA_ROOT}
 
 ### **Training**
 
-DomainNet-126 experiments are done for 7 domain shifts constructed from combinations of `Real`, `Sketch`, `Clipart`, and `Painting`. Before the adaptation, we should have the source model. You may train the source model with script `scripts/train_domainnet-126_source.sh` as shown below. The pre-trained source models for seed 2022 can be [downloaded from here](https://drive.google.com/drive/folders/1i_orPbG753tJ220oLLKi4hAgSudBCLOC?usp=sharing).
+DomainNet-126 experiments are done for 7 domain shifts constructed from combinations of `Real`, `Sketch`, `Clipart`, and `Painting`. Before the adaptation, we should have the source model. You may train the source model with the script `scripts/train_domainnet-126_source.sh` as shown below. The pre-trained source models for seed 2022 can be [downloaded from here](https://drive.google.com/drive/folders/1i_orPbG753tJ220oLLKi4hAgSudBCLOC?usp=sharing).
 
 After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_domainnet-126_target.sh` to execute the adaptation.
 
@@ -144,9 +148,11 @@ bash scripts/train_domainnet-126_target.sh <SOURCE_DOMAIN> <TARGET_DOMAIN> <SRC_
 # example: bash scripts/train_domainnet-126_target.sh real sketch "output/domainnet-126/source"
 ```
 
-This will reproduce Table. 4 from the main paper:
+This will reproduce Table 4 from the main paper:
 
-![Table 4](media/table_4.png)
+<p align="center">
+  <img src="media/tables_4.png" alt="Tables 4" width="700"/>
+</p>
 
 For Windows users, the commands can be found in `scripts_win/`.
 
