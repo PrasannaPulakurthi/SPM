@@ -35,19 +35,25 @@ Download PACS from [kaggel](https://www.kaggle.com/datasets/nickfratto/pacs-data
 
 ```bash
 ${DATA_ROOT}
-├── VISDA-C
-│   ├── train
-│   ├── validation
-│   ├── train_list.txt
-│   ├── validation_list.txt
+├── PACS
+│   ├── photo
+│   ├── art_painting
+│   ├── cartoon
+│   ├── sketch
+│   ├── photo_list.txt
+│   ├── art_painting_list.txt
+│   ├── cartoon_list.txt
+│   ├── sketch_list.txt
+│   ├── acs_list.txt
+│   ├── pcs_list.txt
 ```
 
 `${DATA_ROOT}` is set to `./datasets/` by default, which can be modified in `configs/data/basic.yaml` or via hydra command line interface `data.data_root=${DATA_ROOT}`.
 
 ### **Training**
-The [hydra](https://github.com/facebookresearch/hydra) is used as the configuration system. By default, the working directory is `./output`, which can be changed directly from `configs/root.yaml` or via hydra command line interface `workdir=${WORK_DIR}`.
+The [hydra](https://github.com/facebookresearch/hydra) is used as the configuration system. By default, the working directory is `./output`, which can be changed directly from `configs/root.yaml` or via the hydra command line interface `workdir=${WORK_DIR}`.
 
-VISDA-C experiments are done for `train` to `validation` adaptation. Before the adaptation, we should have the source model. You may train the source model with script `scripts/train_VISDA-C_source.sh` as shown below. The pre-trained source models for seed 2022 can be [downloaded from here](https://drive.google.com/drive/folders/1i_orPbG753tJ220oLLKi4hAgSudBCLOC?usp=sharing).
+VISDA-C experiments are done for `train` to `validation` adaptation. Before the adaptation, we should have the source model. You may train the source model with the script `scripts/train_VISDA-C_source.sh` as shown below. The pre-trained source models for seed 2022 can be [downloaded from here](https://drive.google.com/drive/folders/1i_orPbG753tJ220oLLKi4hAgSudBCLOC?usp=sharing).
 
 After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_VISDA-C_target.sh` to execute the adaptation.
 
@@ -88,7 +94,7 @@ ${DATA_ROOT}
 
 ### **Training**
 
-VISDA-C experiments are done for `train` to `validation` adaptation. Before the adaptation, we should have the source model. You may train the source model with script `scripts/train_VISDA-C_source.sh` as shown below. The pre-trained source models for seed 2022 can be [downloaded from here](https://drive.google.com/drive/folders/1i_orPbG753tJ220oLLKi4hAgSudBCLOC?usp=sharing).
+VISDA-C experiments are done for `train` to `validation` adaptation. Before the adaptation, we should have the source model. You may train the source model with the script `scripts/train_VISDA-C_source.sh` as shown below. The pre-trained source models for seed 2022 can be [downloaded from here](https://drive.google.com/drive/folders/1i_orPbG753tJ220oLLKi4hAgSudBCLOC?usp=sharing).
 
 After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_VISDA-C_target.sh` to execute the adaptation.
 
@@ -151,7 +157,7 @@ bash scripts/train_domainnet-126_target.sh <SOURCE_DOMAIN> <TARGET_DOMAIN> <SRC_
 This will reproduce Table 4 from the main paper:
 
 <p align="center">
-  <img src="media/table_4.png" alt="Tables 4" width="400"/>
+  <img src="media/table_4.png" alt="Tables 4" width="500"/>
 </p>
 
 For Windows users, the commands can be found in `scripts_win/`.
