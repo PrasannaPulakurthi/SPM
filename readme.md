@@ -27,6 +27,48 @@ The code is tested with [Pytorch](https://pytorch.org/get-started/locally/) 1.7.
   pip install hydra-core numpy omegaconf sklearn tqdm wandb seaborn
   ~~~
 
+
+## PACS
+
+### **Prepare dataset**
+Download PACS from [kaggel](https://www.kaggle.com/datasets/nickfratto/pacs-dataset/data?select=pacs_data).
+
+```bash
+${DATA_ROOT}
+├── VISDA-C
+│   ├── train
+│   ├── validation
+│   ├── train_list.txt
+│   ├── validation_list.txt
+```
+
+`${DATA_ROOT}` is set to `./datasets/` by default, which can be modified in `configs/data/basic.yaml` or via hydra command line interface `data.data_root=${DATA_ROOT}`.
+
+### **Training**
+The [hydra](https://github.com/facebookresearch/hydra) is used as the configuration system. By default, the working directory is `./output`, which can be changed directly from `configs/root.yaml` or via hydra command line interface `workdir=${WORK_DIR}`.
+
+VISDA-C experiments are done for `train` to `validation` adaptation. Before the adaptation, we should have the source model. You may train the source model with script `scripts/train_VISDA-C_source.sh` as shown below. The pre-trained source models for seed 2022 can be [downloaded from here](https://drive.google.com/drive/folders/1i_orPbG753tJ220oLLKi4hAgSudBCLOC?usp=sharing).
+
+After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_VISDA-C_target.sh` to execute the adaptation.
+
+```bash
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+
+# train source model
+bash scripts/train_VISDA-C_source.sh
+
+# train SPM SFDA
+bash scripts/train_VISDA-C_target.sh <SRC_MODEL_DIR>
+# example: bash scripts/train_VISDA-C_target.sh "output/VISDA-C/source" 
+```
+
+This will reproduce Table 1 and 2 from the main paper:
+
+![Table 1 2](media/Table_1_2.pdf)
+
+For Windows users, the commands can be found in `scripts_win/`.
+
+
 ## VisDA-C
 
 ### **Prepare dataset**
@@ -42,10 +84,7 @@ ${DATA_ROOT}
 │   ├── validation_list.txt
 ```
 
-`${DATA_ROOT}` is set to `./datasets/` by default, which can be modified in `configs/data/basic.yaml` or via hydra command line interface `data.data_root=${DATA_ROOT}`.
-
 ### **Training**
-The [hydra](https://github.com/facebookresearch/hydra) is used as the configuration system. By default, the working directory is `./output`, which can be changed directly from `configs/root.yaml` or via hydra command line interface `workdir=${WORK_DIR}`.
 
 VISDA-C experiments are done for `train` to `validation` adaptation. Before the adaptation, we should have the source model. You may train the source model with script `scripts/train_VISDA-C_source.sh` as shown below. The pre-trained source models for seed 2022 can be [downloaded from here](https://drive.google.com/drive/folders/1i_orPbG753tJ220oLLKi4hAgSudBCLOC?usp=sharing).
 
@@ -87,10 +126,7 @@ ${DATA_ROOT}
 │   ├── painting_list.txt
 ```
 
-`${DATA_ROOT}` is set to `./datasets/` by default, which can be modified in `configs/data/basic.yaml` or via hydra command line interface `data.data_root=${DATA_ROOT}`.
-
 ### **Training**
-The [hydra](https://github.com/facebookresearch/hydra) is used as the configuration system. By default, the working directory is `./output`, which can be changed directly from `configs/root.yaml` or via hydra command line interface `workdir=${WORK_DIR}`.
 
 DomainNet-126 experiments are done for 7 domain shifts constructed from combinations of `Real`, `Sketch`, `Clipart`, and `Painting`. Before the adaptation, we should have the source model. You may train the source model with script `scripts/train_domainnet-126_source.sh` as shown below. The pre-trained source models for seed 2022 can be [downloaded from here](https://drive.google.com/drive/folders/1i_orPbG753tJ220oLLKi4hAgSudBCLOC?usp=sharing).
 
@@ -113,11 +149,6 @@ This will reproduce Table. 4 from the main paper:
 ![Table 4](media/table_domainnet.png)
 
 For Windows users, the commands can be found in `scripts_win/`.
-
-## PACS
-
-### **Prepare dataset**
-Download PACS from [kaggel](https://www.kaggle.com/datasets/nickfratto/pacs-dataset/data?select=pacs_data).
 
 ## Reference
 
