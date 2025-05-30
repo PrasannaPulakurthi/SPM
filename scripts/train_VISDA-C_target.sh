@@ -1,5 +1,5 @@
 SRC_MODEL_DIR=$1
-PORT=$2
+PORT=${2:-20000}
 
 MEMO="target"
 SEED="2022"
