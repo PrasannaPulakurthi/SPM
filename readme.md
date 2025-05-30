@@ -71,7 +71,7 @@ bash scripts/train_PACS_target.sh <SRC_MODEL_DIR>
 This will reproduce Tables 1 and 2 from the main paper:
 
 <p align="center">
-  <img src="media/tables_1_2.png" alt="Tables 1 & 2" width="400"/>
+  <img src="assets/tables_1_2.png" alt="Tables 1 & 2" width="400"/>
 </p>
 
 For Windows users, the commands can be found in `scripts_win/`.
@@ -112,7 +112,7 @@ bash scripts/train_VISDA-C_target.sh <SRC_MODEL_DIR>
 This will reproduce the Table. 3 from the main paper:
 
 <p align="center">
-  <img src="media/table_3.png" alt="Tables 3" width="800"/>
+  <img src="assets/table_3.png" alt="Tables 3" width="800"/>
 </p>
 
 For Windows users, the commands can be found in `scripts_win/`.
@@ -157,7 +157,7 @@ bash scripts/train_domainnet-126_target.sh <SOURCE_DOMAIN> <TARGET_DOMAIN> <SRC_
 This will reproduce Table 4 from the main paper:
 
 <p align="center">
-  <img src="media/table_4.png" alt="Tables 4" width="500"/>
+  <img src="assets/table_4.png" alt="Tables 4" width="500"/>
 </p>
 
 For Windows users, the commands can be found in `scripts_win/`.
