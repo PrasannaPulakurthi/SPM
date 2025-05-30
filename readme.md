@@ -68,7 +68,8 @@ After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `sc
 export CUDA_VISIBLE_DEVICES=0,1
 
 # train source model
-bash scripts/train_PACS_source.sh
+bash scripts/train_PACS_source.sh <SOURCE_DOMAIN>
+# example: bash scripts/train_PACS_source.sh photo
 
 # train SPM SFDA
 bash scripts/train_PACS_target.sh <SRC_MODEL_DIR>
