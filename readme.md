@@ -39,7 +39,7 @@ This is the official implementation of the **ICIP 2025** paper **"Shuffle PatchM
 ## PACS
 
 ### **Prepare dataset**
-Download PACS from [Kaggel](https://www.kaggle.com/datasets/nickfratto/pacs-dataset/data?select=pacs_data) or the [Official Website](https://domaingeneralization.github.io/), and put it under `${DATA_ROOT}`. For your convenience, the `.txt` files based on the image labels are provided under `./datasets/PACS/`. The prepared directory would look like this:
+Download PACS from [Kaggle](https://www.kaggle.com/datasets/nickfratto/pacs-dataset/data?select=pacs_data) or the [Official Website](https://domaingeneralization.github.io/), and put it under `${DATA_ROOT}`. For your convenience, the `.txt` files based on the image labels are provided under `./datasets/PACS/`. The prepared directory would look like this:
 
 ```bash
 ${DATA_ROOT}
