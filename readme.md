@@ -23,6 +23,14 @@ This is the official implementation of the ICIP 2025 paper **"Shuffle PatchMix A
 
 2. Install requirements using Python 3.9.
 
+    ~~~
+    conda create -n mmd-nas python=3.9
+    conda activate mmd-nas
+    pip install -r requirements.txt
+    ~~~
+    
+2. Install requirements using Python 3.9.
+
   ~~~
   conda create -n spm-env python=3.9
   conda activate spm-env
