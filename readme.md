@@ -65,15 +65,13 @@ PACS experiments are done for 6 domain shifts constructed from combinations of `
 After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_PACS_target.sh` to execute the adaptation.
 
 ```bash
-export CUDA_VISIBLE_DEVICES=0,1
-
 # train source model
 bash scripts/train_PACS_source.sh <SOURCE_DOMAIN>
 # example: bash scripts/train_PACS_source.sh photo
 
 # train SPM SFDA
-bash scripts/train_PACS_target.sh <SRC_MODEL_DIR>
-# example: bash scripts/train_PACS_target.sh "output/PACS/source" 
+bash scripts/train_PACS_target.sh <SOURCE_DOMAIN> <TARGET_DOMAIN> <SRC_MODEL_DIR>
+# example: bash scripts/train_PACS_target.sh photo art_painting "output/PACS/source" 
 ```
 
 This will reproduce Tables 1 and 2 from the main paper:
@@ -107,8 +105,6 @@ VISDA-C experiments are done for `train` to `validation` adaptation. Before the 
 After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_VISDA-C_target.sh` to execute the adaptation.
 
 ```bash
-export CUDA_VISIBLE_DEVICES=0,1,2,3
-
 # train source model
 bash scripts/train_VISDA-C_source.sh
 
@@ -151,8 +147,6 @@ DomainNet-126 experiments are done for 7 domain shifts constructed from combinat
 After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_domainnet-126_target.sh` to execute the adaptation.
 
 ```bash
-export CUDA_VISIBLE_DEVICES=0,1,2,3
-
 # train source model
 bash scripts/train_domainnet-126_source.sh <SOURCE_DOMAIN>
 # example: bash scripts/train_domainnet-126_source.sh real
