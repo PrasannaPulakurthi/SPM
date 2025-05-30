@@ -16,31 +16,23 @@ This is the official implementation of the ICIP 2025 paper **"Shuffle PatchMix A
 
 1. Clone this repository.
 
-  ~~~
-  git clone https://github.com/PrasannaPulakurthi/SPM.git
-  cd SPM
-  ~~~
-
-2. Install requirements using Python 3.9.
-
     ~~~
-    conda create -n mmd-nas python=3.9
-    conda activate mmd-nas
-    pip install -r requirements.txt
+    git clone https://github.com/PrasannaPulakurthi/SPM.git
+    cd SPM
     ~~~
     
 2. Install requirements using Python 3.9.
 
-  ~~~
-  conda create -n spm-env python=3.9
-  conda activate spm-env
-  ~~~
+    ~~~
+    conda create -n spm-env python=3.9
+    conda activate spm-env
+    ~~~
 
 3. The code is tested with [Pytorch](https://pytorch.org/get-started/locally/) 1.7.1, CUDA 11.0. Please also make sure to install the following packages:
 
-  ~~~
-  pip install -r requirements.txt
-  ~~~
+    ~~~
+    pip install -r requirements.txt
+    ~~~
 
 
 ## PACS
