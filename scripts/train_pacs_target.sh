@@ -17,7 +17,7 @@ learn.patch_height=56 \
 learn.alpha_spm=8.0 \
 learn.reweighting=true \
 data.batch_size=128 \
-data.aug_type=${AUG} \
+data.aug_type="shuffle_patch_mix_o_all" \
 data.data_root="datasets" data.workers=8 \
 data.dataset="PACS" data.source_domains="[${SRC_DOMAIN}]" data.target_domains="[${TGT_DOMAIN}]" \
 model_src.arch="resnet18" \

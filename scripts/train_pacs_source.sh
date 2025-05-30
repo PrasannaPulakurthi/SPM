@@ -12,7 +12,6 @@ python main.py \
 seed=${SEED} port=${PORT} memo=${MEMO} project="PACS" \
 learn.epochs=20 \
 data.batch_size=16 \
-data.aug_type=${AUG} \
 data.data_root="datasets" data.workers=8 \
 data.dataset="PACS" \
 data.source_domains="[${SRC_DOMAIN}]" data.target_domains="[photo,art_painting,cartoon,sketch]" \
