@@ -34,6 +34,7 @@ This is the official implementation of the **ICIP 2025** paper **"Shuffle PatchM
     pip install -r requirements.txt
     ~~~
 
+---
 
 ## PACS
 
@@ -82,6 +83,7 @@ This will reproduce Tables 1 and 2 from the main paper:
 
 For Windows users, the commands can be found in `scripts_win/`.
 
+---
 
 ## VisDA-C
 
@@ -120,6 +122,8 @@ This will reproduce the Table. 3 from the main paper:
 </p>
 
 For Windows users, the commands can be found in `scripts_win/`.
+
+---
 
 ## DomainNet-126
 
@@ -164,11 +168,15 @@ This will reproduce Table 4 from the main paper:
 
 For Windows users, the commands can be found in `scripts_win/`.
 
+---
+
 ## Reference
 
 If you find this work helpful to your work, please consider citing us:
 ```
 ```
+
+---
 
 ## Acknowledgement
 Codebases from [AdaContrast](https://github.com/DianCh/AdaContrast) and [FBA](https://github.com/PrasannaPulakurthi/Foreground-Background-Augmentation).
