@@ -1,7 +1,7 @@
 # <p align="center">Shuffle PatchMix</p>
 
 <p align="center">
-  <a href="https://arxiv.org/abs/2504.13077"><img src="https://img.shields.io/badge/arXiv-2504.13077-b31b1b.svg" alt="arXiv"></a>
+  <a href="https://www.arxiv.org/abs/2505.24216"><img src="https://img.shields.io/badge/arXiv-2505.24216-b31b1b.svg" alt="arXiv"></a>
   <a href="https://paperswithcode.com/paper/effective-dual-region-augmentation-for"><img src="https://img.shields.io/badge/Papers%20with%20Code-SPM-blue" alt="Papers with Code"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 </p>
