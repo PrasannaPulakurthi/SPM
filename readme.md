@@ -174,6 +174,15 @@ For Windows users, the commands can be found in `scripts_win/`.
 
 If you find this work helpful to your work, please consider citing us:
 ```
+@misc{pulakurthi2025shufflepatchmixaugmentationconfidencemargin,
+      title={Shuffle PatchMix Augmentation with Confidence-Margin Weighted Pseudo-Labels for Enhanced Source-Free Domain Adaptation}, 
+      author={Prasanna Reddy Pulakurthi and Majid Rabbani and Jamison Heard and Sohail Dianat and Celso M. de Melo and Raghuveer Rao},
+      year={2025},
+      eprint={2505.24216},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2505.24216}, 
+}
 ```
 
 ---
