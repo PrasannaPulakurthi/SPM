@@ -33,7 +33,7 @@ This is the official implementation of the **ICIP 2025** paper **"Shuffle PatchM
     pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
     ~~~
     
-4. Please also make sure to install additional packages using the following command:
+4. Please also make sure to install additional packages using the following command.
     ~~~
     pip install -r requirements.txt
     ~~~
@@ -67,7 +67,7 @@ The [hydra](https://github.com/facebookresearch/hydra) is used as the configurat
 
 PACS experiments are done for 6 domain shifts constructed from combinations of `Photo`, `Art_Painting`, `Cartoon`, and `Sketch`. Before the adaptation, we should have the source model. You may train the source model with the script `scripts/train_PACS_source.sh` as shown below. The pre-trained source models for seed 2022 can be found on [Hugging Face](https://huggingface.co/prasannareddyp/SPM-PACS/tree/main).
 
-After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_PACS_target.sh` to execute the adaptation.
+After obtaining the source models, put them under `${SRC_MODEL_DIR}=./output/PACS/source` and run `scripts/train_PACS_target.sh` to execute the adaptation.
 
 ```bash
 # train source model
@@ -108,7 +108,7 @@ ${DATA_ROOT}
 
 VISDA-C experiments are done for `train` to `validation` adaptation. Before the adaptation, we should have the source model. You may train the source model with the script `scripts/train_VISDA-C_source.sh` as shown below. The pre-trained source models for seed 2022 can be found on [Hugging Face](https://huggingface.co/prasannareddyp/SPM-VisDA-C/tree/main).
 
-After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_VISDA-C_target.sh` to execute the adaptation.
+After obtaining the source models, put them under `${SRC_MODEL_DIR}=./output/VISDA-C/source` and run `scripts/train_VISDA-C_target.sh` to execute the adaptation.
 
 ```bash
 # train source model
@@ -152,7 +152,7 @@ ${DATA_ROOT}
 
 DomainNet-126 experiments are done for 7 domain shifts constructed from combinations of `Real`, `Sketch`, `Clipart`, and `Painting`. Before the adaptation, we should have the source model. You may train the source model with the script `scripts/train_domainnet-126_source.sh` as shown below. The pre-trained source models for seed 2022 can be found on [Hugging Face](https://huggingface.co/prasannareddyp/SPM-DomainNet-126/tree/main).
 
-After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_domainnet-126_target.sh` to execute the adaptation.
+After obtaining the source models, put them under `${SRC_MODEL_DIR}=./output/domainnet-126/source` and run `scripts/train_domainnet-126_target.sh` to execute the adaptation.
 
 ```bash
 # train source model
