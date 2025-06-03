@@ -28,8 +28,12 @@ This is the official implementation of the **ICIP 2025** paper **"Shuffle PatchM
     conda activate spm-env
     ~~~
 
-3. The code is tested with [Pytorch](https://pytorch.org/get-started/locally/) 1.7.1, CUDA 11.0. Please also make sure to install the following packages:
-
+3. The code is tested with [Pytorch](https://pytorch.org/get-started/locally/) 1.7.1, CUDA 11.0.
+    ~~~ 
+    pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+    ~~~
+    
+4. Please also make sure to install the following packages:
     ~~~
     pip install -r requirements.txt
     ~~~
