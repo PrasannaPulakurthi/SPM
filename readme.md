@@ -43,7 +43,7 @@ This is the official implementation of the **ICIP 2025** paper **"Shuffle PatchM
 ## PACS
 
 ### **Prepare dataset**
-Download PACS from [Kaggle](https://www.kaggle.com/datasets/nickfratto/pacs-dataset/data?select=pacs_data) or the [Official Website](https://domaingeneralization.github.io/), and put it under `${DATA_ROOT}`. For your convenience, the `.txt` files based on the image labels are provided under `./datasets/PACS/`. The prepared directory would look like this:
+Download PACS from [Kaggle](https://www.kaggle.com/datasets/nickfratto/pacs-dataset/data?select=pacs_data) or the [Official Website](https://domaingeneralization.github.io/), and put it under `${DATA_ROOT}`. The `.txt` files for the image labels are provided under `./datasets/PACS/`. The prepared directory would look like this:
 
 ```bash
 ${DATA_ROOT}
@@ -93,7 +93,7 @@ For Windows users, the commands can be found in `scripts_win/`.
 
 ### **Prepare dataset**
 
-Please download the [VisDA-C dataset](https://github.com/VisionLearningGroup/taskcv-2017-public/tree/master/classification), and put it under `${DATA_ROOT}`. For your convenience, the `.txt` files based on the image labels are provided under `./datasets/VISDA-C/`. The prepared directory would look like this:
+Please download the [VisDA-C dataset](https://github.com/VisionLearningGroup/taskcv-2017-public/tree/master/classification), and put it under `${DATA_ROOT}`. The `.txt` files for the image labels are provided under `./datasets/VISDA-C/`. The prepared directory would look like this:
 
 ```bash
 ${DATA_ROOT}
@@ -133,7 +133,7 @@ For Windows users, the commands can be found in `scripts_win/`.
 
 ### **Prepare dataset**
 
-Please download the [DomainNet dataset (cleaned version)](http://ai.bu.edu/M3SDA/), and put it under `${DATA_ROOT}`. Notice that we follow [MME](https://arxiv.org/abs/1904.06487) to use a subset that contains 126 classes from 4 domains. The `.txt` files on the image labels are provided under `./datasets/domainnet-126/`. The prepared directory would look like this:
+Please download the [DomainNet dataset (cleaned version)](http://ai.bu.edu/M3SDA/), and put it under `${DATA_ROOT}`. Notice that we follow [MME](https://arxiv.org/abs/1904.06487) to use a subset that contains 126 classes from 4 domains. The `.txt` files for the image labels are provided under `./datasets/domainnet-126/`. The prepared directory would look like this:
 
 ```bash
 ${DATA_ROOT}
