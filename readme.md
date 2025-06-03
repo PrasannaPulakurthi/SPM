@@ -33,7 +33,7 @@ This is the official implementation of the **ICIP 2025** paper **"Shuffle PatchM
     pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
     ~~~
     
-4. Please also make sure to install the following packages:
+4. Please also make sure to install additional packages using the following command:
     ~~~
     pip install -r requirements.txt
     ~~~
