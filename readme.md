@@ -30,7 +30,7 @@ This is the official implementation of the **ICIP 2025** paper **"Shuffle PatchM
 
 3. The code is tested with [Pytorch](https://pytorch.org/get-started/locally/) 1.7.1, CUDA 11.0.
     ~~~ 
-    pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+    pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 -f https://download.pytorch.org/whl/torch_stable.html
     ~~~
     
 4. Please also make sure to install additional packages using the following command.
