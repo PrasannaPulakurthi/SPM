@@ -61,7 +61,7 @@ ${DATA_ROOT}
 ### **Training**
 The [hydra](https://github.com/facebookresearch/hydra) is used as the configuration system. By default, the working directory is `./output`, which can be changed directly from `configs/root.yaml` or via the hydra command line interface `workdir=${WORK_DIR}`.
 
-PACS experiments are done for 6 domain shifts constructed from combinations of `Photo`, `Art_Painting`, `Cartoon`, and `Sketch`. Before the adaptation, we should have the source model. You may train the source model with the script `scripts/train_PACS_source.sh` as shown below. The pre-trained source models for seed 2022 can be found on [Hugging Face](https://huggingface.co/prasannareddyp/SPM/blob/main/PACS.zip).
+PACS experiments are done for 6 domain shifts constructed from combinations of `Photo`, `Art_Painting`, `Cartoon`, and `Sketch`. Before the adaptation, we should have the source model. You may train the source model with the script `scripts/train_PACS_source.sh` as shown below. The pre-trained source models for seed 2022 can be found on [Hugging Face](https://huggingface.co/prasannareddyp/SPM-PACS/tree/main).
 
 After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_PACS_target.sh` to execute the adaptation.
 
@@ -102,7 +102,7 @@ ${DATA_ROOT}
 
 ### **Training**
 
-VISDA-C experiments are done for `train` to `validation` adaptation. Before the adaptation, we should have the source model. You may train the source model with the script `scripts/train_VISDA-C_source.sh` as shown below. The pre-trained source models for seed 2022 can be found on [Hugging Face](https://huggingface.co/prasannareddyp/SPM/blob/main/VISDA-C.zip).
+VISDA-C experiments are done for `train` to `validation` adaptation. Before the adaptation, we should have the source model. You may train the source model with the script `scripts/train_VISDA-C_source.sh` as shown below. The pre-trained source models for seed 2022 can be found on [Hugging Face](https://huggingface.co/prasannareddyp/SPM-VisDA-C/tree/main).
 
 After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_VISDA-C_target.sh` to execute the adaptation.
 
@@ -146,7 +146,7 @@ ${DATA_ROOT}
 
 ### **Training**
 
-DomainNet-126 experiments are done for 7 domain shifts constructed from combinations of `Real`, `Sketch`, `Clipart`, and `Painting`. Before the adaptation, we should have the source model. You may train the source model with the script `scripts/train_domainnet-126_source.sh` as shown below. The pre-trained source models for seed 2022 can be found on [Hugging Face](https://huggingface.co/prasannareddyp/SPM/blob/main/domainnet-126.zip).
+DomainNet-126 experiments are done for 7 domain shifts constructed from combinations of `Real`, `Sketch`, `Clipart`, and `Painting`. Before the adaptation, we should have the source model. You may train the source model with the script `scripts/train_domainnet-126_source.sh` as shown below. The pre-trained source models for seed 2022 can be found on [Hugging Face](https://huggingface.co/prasannareddyp/SPM-DomainNet-126/tree/main).
 
 After obtaining the source models, put them under `${SRC_MODEL_DIR}` and run `scripts/train_domainnet-126_target.sh` to execute the adaptation.
 
