@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://www.arxiv.org/abs/2505.24216"><img src="https://img.shields.io/badge/arXiv-2505.24216-b31b1b.svg" alt="arXiv"></a>
-  <a href="https://huggingface.co/papers/2505.24216"><img src="https://img.shields.io/badge/HF-SPM-white.svg" alt="arXiv"></a>
+  <a href="https://huggingface.co/papers/2505.24216"><img src="https://img.shields.io/badge/Hugging Face-SPM-white.svg" alt="arXiv"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 </p>
 
