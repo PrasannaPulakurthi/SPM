@@ -192,4 +192,4 @@ If you find this work helpful to your work, please consider citing us:
 ---
 
 ## Acknowledgement
-Codebases from [AdaContrast](https://github.com/DianCh/AdaContrast) and [FBA](https://github.com/PrasannaPulakurthi/Foreground-Background-Augmentation).
+Codebases from [AdaContrast](https://github.com/DianCh/AdaContrast) and [DRA](https://github.com/PrasannaPulakurthi/Foreground-Background-Augmentation).
