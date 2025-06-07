@@ -3,12 +3,31 @@
 <p align="center">
   <a href="https://www.arxiv.org/abs/2505.24216"><img src="https://img.shields.io/badge/arXiv-2505.24216-b31b1b.svg" alt="arXiv"></a>
   <a href="https://huggingface.co/papers/2505.24216"><img src="https://img.shields.io/badge/Hugging Face-SPM-white.svg" alt="arXiv"></a>
+  <a href="https://paperswithcode.com/paper/shuffle-patchmix-augmentation-with-confidence"><img src="https://img.shields.io/badge/Papers%20with%20Code-SPM-blue" alt="Papers with Code"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 </p>
 
 This is the official implementation of the **ICIP 2025** paper **"Shuffle PatchMix Augmentation with Confidence-Margin Weighted Pseudo-Labels for Enhanced Source-Free Domain Adaptation"**, by [Prasanna Reddy Pulakurthi](https://www.prasannapulakurthi.com/), [Majid Rabbani](https://www.rit.edu/directory/mxreee-majid-rabbani), [Jamison Heard](https://www.rit.edu/directory/jrheee-jamison-heard), [Sohail A. Dianat](https://www.rit.edu/directory/sadeee-sohail-dianat), [Celso M. de Melo](https://celsodemelo.net/), and [Raghuveer Rao](https://ieeexplore.ieee.org/author/37281258600).
 
 ![Main figure](assets/spm.png)
+
+---
+
+## Leaderboard Rankings
+
+<p align="center">
+  <a href="https://paperswithcode.com/sota/source-free-domain-adaptation-on-pacs?p=shuffle-patchmix-augmentation-with-confidence">
+    <img src="https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/shuffle-patchmix-augmentation-with-confidence/source-free-domain-adaptation-on-pacs">
+  </a>
+  
+  <a href="https://paperswithcode.com/sota/domain-adaptation-on-domainnet-1?p=shuffle-patchmix-augmentation-with-confidence">
+    <img src="https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/shuffle-patchmix-augmentation-with-confidence/domain-adaptation-on-domainnet-1">
+  </a>
+  
+  <a href="https://paperswithcode.com/sota/source-free-domain-adaptation-on-visda-2017?p=shuffle-patchmix-augmentation-with-confidence">
+    <img src="https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/shuffle-patchmix-augmentation-with-confidence/source-free-domain-adaptation-on-visda-2017">
+  </a>
+</p>
 
 ---
 
